@@ -11,6 +11,5 @@ for i=1:length(f)
         out(i) = 0;
     end
 end
-out = sqrt(out);
 end
 
