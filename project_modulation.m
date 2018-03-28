@@ -42,6 +42,7 @@ h_time = fftshift(ifft(ifftshift(h_freq)));
 deltat = 1/fsampling;
 t = (-(RRCtaps-1)/2:(RRCtaps-1)/2)*deltat;
 
+%%plot all shifted signals
 % figure;
 % plot(t,h_time);
 % hold on
@@ -60,6 +61,7 @@ signal_hrrc_tx = conv(signal_tx, h_time);
 % stem(signal_hrrc_tx);
 
 %% Noise through the channel
+<<<<<<< HEAD
 EbN0 = -5:44;
 BER = zeros(length(EbN0),1);
 signal_power = (trapz(abs(signal_hrrc_tx).^2))*(1/fsampling); % total power
@@ -91,3 +93,33 @@ grid on
 % if bits_rx == bits_tx
 %     disp('ok')
 % end
+=======
+signal_power = (trapz(abs(signal_hrrc_tx)).^2)*(1/fsampling); % total power
+Eb = signal_power/N; % energy per bit
+% EbN0 = [0.01 0.1 1 10 100 1000 1e+4 1e+5 1e+6 1e+7 1e+8 1e+9 1e+10 1e+11 1e+12 1e+13 1e+14]; % SNR (parameter)
+EbN0=1e+15;
+BER=[];
+for i=1:length(EbN0)
+    N0 = Eb/EbN0(i); 
+    NoisePower = 2*N0*fsampling;
+    noise = sqrt(NoisePower/2)*(randn(length(signal_hrrc_tx),1)+1i*randn(length(signal_hrrc_tx),1));
+
+    signal_rx = signal_hrrc_tx+noise;
+    signal_hhrc_rx = conv(signal_rx, h_time);
+
+    signal_hhrc_rx_trunc = signal_hhrc_rx(RRCtaps:end-RRCtaps+1);
+    
+    %% downsampling
+    signal_rx_down = downsample(signal_hhrc_rx_trunc, M);
+
+    %% demapping
+    bits_rx = demapping(signal_rx_down,Nbps,modulation);
+
+    if bits_rx ~= bits_tx
+        disp('ha...')
+    end
+    BER(i) = (N-nnz(bits_rx == bits_tx))/N;
+end
+
+% plot(20*log10(EbN0),log10(BER))
+>>>>>>> 157433bf18f8805880daa43b486cf644f1aab975
