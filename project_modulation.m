@@ -42,6 +42,7 @@ h_time = fftshift(ifft(ifftshift(h_freq)));
 deltat = 1/fsampling;
 t = (-(RRCtaps-1)/2:(RRCtaps-1)/2)*deltat;
 
+%%plot all shifted signals
 % figure;
 % plot(t,h_time);
 % hold on
