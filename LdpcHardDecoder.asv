@@ -1,0 +1,15 @@
+function [decoded_bits] = LdpcHardDecoder(bits_rx, graph)
+N = length(bits_rx);
+% first step: initialize the v_nodes
+for i=1:N
+    graph.v_nodes(i).msg = bits_rx(i);
+end
+% then communicate the msg to c_nodes
+for v=1:N
+    c_nodes = [graph.v_nodes(i).c_nodes];
+    for c=1:length(c_nodes)
+        graph.c_nodes(c_nodes(c)) = 
+    end
+end
+end
+
