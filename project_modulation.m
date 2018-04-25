@@ -24,11 +24,7 @@ signal = mapping(bits_tx,Nbps,modulation);
 signal_tx = upsample(signal,M);
 
 %% implementation of transfer function
-<<<<<<< HEAD
 RRCtaps = 365;
-=======
-RRCtaps = 165;
->>>>>>> 0764f68a1f318eda1de80f60b0691cb6d8baae14
 stepoffset = (1/RRCtaps)*fsampling;
 highestfreq = (RRCtaps-1)*stepoffset/2;
 f = linspace(-highestfreq,highestfreq,RRCtaps);

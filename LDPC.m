@@ -33,6 +33,7 @@ modulation = 'qam'; % type of modulation
 beta = 0.3; % roll-off factor
 
 %% mapping of encoded signal
+signal_uncoded = mapping(bits_tx,Nbps,modulation);
 signal = mapping(bits_tx_coded,Nbps,modulation);
 
 %% upsampling
@@ -92,14 +93,16 @@ for i = -5:44
 
     %% demapping
     bits_rx = demapping(signal_rx_down,Nbps,modulation);
+    decoded_bits_rx = [];
     %% decode the encoded signal
     for k=1:Npackets
         packet_rx = bits_rx(1+(k-1)*codedWordLength : k*codedWordLength);
-        %decoded_packet_rx = LdpcHardDecoder(packet_rx, tannerGraph);
+        decoded_packet_rx = LdpcHardDecoder(packet_rx, H, tannerGraph, 4);
+        decoded_bits_rx = [decoded_bits_rx decoded_packet_rx];
     end
     
     %% calculate bit error rate
-    BER1(j) = length(find(bits_tx_coded ~= bits_rx))/length(bits_tx_coded);
+    BER1(j) = length(find(bits_tx ~= decoded_bits_rx))/length(bits_tx_coded);
     j = j+1;
 end
 % semilogy(EbN0,BER)

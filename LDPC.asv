@@ -20,7 +20,7 @@ for k=1:Npackets
     bits_tx_coded(1+(k-1)*codedWordLength : k*codedWordLength) = [codedbits packet_tx];
 end
 % Build Tanner Graph (usefull for the decoder)
-%tannerGraph = buildTannerGraph(H);
+tannerGraph = buildTannerGraph(H);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 f_cut = 1e+6; % cut off frequency of the nyquist filter [Mhz]
@@ -94,12 +94,12 @@ for i = -5:44
     bits_rx = demapping(signal_rx_down,Nbps,modulation);
     %% decode the encoded signal
     for k=1:Npackets
-        packet_rx = bits_rx(1+(k-1)*codedWordLE : k*redundancy*packetLength);
-        % decoded_packet_rx = LdpcHardDecoder(packet_rx, tannerGraph);
+        packet_rx = bits_rx(1+(k-1)*codedWordLength : k*codedWordLength);
+        decoded_packet_rx = LdpcHardDecoder(packet_rx, H, tannerGraph, 2);
     end
     
     %% calculate bit error rate
-    BER1(j) = length(find(bits_tx ~= bits_rx))/length(bits_tx);
+    BER1(j) = length(find(bits_tx_coded ~= bits_rx))/length(bits_tx_coded);
     j = j+1;
 end
 % semilogy(EbN0,BER)
