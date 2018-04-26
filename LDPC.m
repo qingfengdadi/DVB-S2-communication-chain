@@ -5,7 +5,8 @@ addpath(genpath('Code mapping-demapping'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %RANDOM BITS
-Npackets = 100;
+tic;
+Npackets = 50;
 packetLength = 128;
 codedWordLength = 256;
 Nbits = Npackets*packetLength; % bit stream length
@@ -48,8 +49,8 @@ Hrrc = HRRC(f,Tsymb,beta);
 h_t = ifft(Hrrc);
 h_freq = (fft(h_t/max(h_t)));
 
-figure;
-plot(f,h_freq); grid on;
+% figure;
+% plot(f,h_freq); grid on;
 
 h_time = fftshift(ifft(ifftshift(h_freq)));
 deltat = 1/fsampling;
@@ -74,10 +75,10 @@ signal_hrrc_tx = conv(signal_tx, h_time);
 
 %% Noise through the channel
 BER1 = [];
-signal_power = (trapz(abs(signal_hrrc_tx).^2))*(1/fsampling); % total power
+signal_power = (trapz(abs(signal_uncoded).^2))*(1/fsampling); % total power
 Eb = signal_power*0.5/Nbits; % energy per bit
 j = 1;
-for i = -5:44
+for i = -5:15
     EbN0(j) = i;
 %     EbN0 = 1000; % SNR (parameter)
     N0 = Eb/(10.^(EbN0(j)/10));
@@ -92,18 +93,19 @@ for i = -5:44
     signal_rx_down = downsample(signal_hhrc_rx_trunc, M);
 
     %% demapping
-    bits_rx = demapping(signal_rx_down,Nbps,modulation);
-    decoded_bits_rx = [];
+    bits_rx = (demapping(signal_rx_down,Nbps,modulation))';
     %% decode the encoded signal
+    decoded_bits_rx = [];
     for k=1:Npackets
         packet_rx = bits_rx(1+(k-1)*codedWordLength : k*codedWordLength);
         decoded_packet_rx = LdpcHardDecoder(packet_rx, H, tannerGraph, 4);
-        decoded_bits_rx = [decoded_bits_rx decoded_packet_rx];
+        decoded_bits_rx = [decoded_bits_rx decoded_packet_rx(packetLength+1:end)]; % H = [I P]
     end
     
     %% calculate bit error rate
-    BER1(j) = length(find(bits_tx ~= decoded_bits_rx))/length(bits_tx_coded);
+    BER1(j) = length(find(bits_tx ~= decoded_bits_rx'))/length(decoded_bits_rx');
     j = j+1;
 end
-% semilogy(EbN0,BER)
-% grid on
+semilogy(EbN0,BER1)
+grid on
+toc

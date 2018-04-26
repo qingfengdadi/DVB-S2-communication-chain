@@ -8,7 +8,7 @@ for i=1:N
     graph.v_nodes(i).msg = bits_rx(i);
 end
 % then communicate the msg to c_nodes
-while ((it < numIt) || (length(find(mod(decoded_bits*H',2))) ~= 0))
+while ((it < numIt) && (length(find(mod(decoded_bits*H',2))) ~= 0))
     % communicate the msg to c_nodes
     for i=1:N
         c_nodes = graph.v_nodes(i).c_nodes; % c_nodes connected to a given v_node
