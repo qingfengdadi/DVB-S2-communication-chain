@@ -1,7 +1,7 @@
+clear; close all;
 %% Projet modulation & coding
 addpath(genpath('Code encodeur'));
 addpath(genpath('Code mapping-demapping'));
-% clear; close all;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %RANDOM BITS
@@ -13,7 +13,7 @@ M = 8; % oversampling factor
 fsymb = 2*f_cut; % symbol frequency
 fsampling = M*fsymb; % sampling frequency
 Tsymb = 1/fsymb; % time between two symbols
-Nbps = 2; % number of bits per symbol
+Nbps = 4; % number of bits per symbol
 modulation = 'qam'; % type of modulation 
 beta = 0.3; % roll-off factor
 
@@ -32,24 +32,27 @@ Hrrc = HRRC(f,Tsymb,beta);
 h_t = ifft(Hrrc);
 h_freq = (fft(h_t/max(h_t)));
 
-figure;
-plot(f,h_freq); grid on;
+%%
+% figure;
+% plot(f,h_freq); grid on;
 
+%%
 h_time = fftshift(ifft(ifftshift(h_freq)));
 deltat = 1/fsampling;
 t = (-(RRCtaps-1)/2:(RRCtaps-1)/2)*deltat;
 
-figure;
-plot(t,h_time);
-hold on
-plot(t+Tsymb,h_time);
-hold on
-plot(t+2*Tsymb,h_time);
-hold on
-plot(t+3*Tsymb,h_time);
-hold on
-plot(t+4*Tsymb,h_time);
-grid on;
+%%
+% figure;
+% plot(t,h_time);
+% hold on
+% plot(t+Tsymb,h_time);
+% hold on
+% plot(t+2*Tsymb,h_time);
+% hold on
+% plot(t+3*Tsymb,h_time);
+% hold on
+% plot(t+4*Tsymb,h_time);
+% grid on;
 
 %% Convolution
 signal_hrrc_tx = conv(signal_tx, h_time);
@@ -57,7 +60,7 @@ signal_hrrc_tx = conv(signal_tx, h_time);
 % stem(signal_hrrc_tx);
 
 %% Noise through the channel
-BER1 = [];
+BER = [];
 signal_power = (trapz(abs(signal_hrrc_tx).^2))*(1/fsampling); % total power
 Eb = signal_power*0.5/Nbits; % energy per bit
 j = 1;
@@ -77,8 +80,10 @@ for i = -5:44
 
     %% demapping
     bits_rx = demapping(signal_rx_down,Nbps,modulation);
-    BER1(j) = length(find(bits_tx ~= bits_rx))/length(bits_tx);
+    BER(j) = length(find(bits_tx ~= bits_rx))/length(bits_tx);
     j = j+1;
 end
-% semilogy(EbN0,BER)
-% grid on
+
+figure;
+semilogy(EbN0,BER);
+grid on;
