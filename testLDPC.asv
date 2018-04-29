@@ -11,6 +11,6 @@ msg_rx = [1 1 0 1 0 1 0 1];
 
 
 
-d = LdpcSoftDecoder(symb_rx', H, graph, 1, 10)
-err_d = sum(bit_tx'-bit_hihi)
+d = LdpcSoftDecoder(symb_rx, H, graph, 1, 10)
+err = 
 toc

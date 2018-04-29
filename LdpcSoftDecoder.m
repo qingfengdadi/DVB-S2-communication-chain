@@ -1,4 +1,4 @@
-function [graph] = LdpcSoftDecoder(bits_rx, H, graph, noiseVar, numIt)
+function [decoded_bits] = LdpcSoftDecoder(bits_rx, H, graph, noiseVar, numIt)
 [M,N] = size(H);
 it = 0;
 decoded_bits = bits_rx;
@@ -17,7 +17,7 @@ for i=1:N
         for k=1:length(nums)
             % to get relative index of v_node with respect to c_node
             if nums(k) == i
-                graph.c_nodes(idx).v_nodes(k).msg = Lci;
+                graph.c_nodes(idx).v_nodes(k).msg = Lci(i);
             end
         end
     end
@@ -29,15 +29,13 @@ while ((it < numIt) && (length(find(mod(decoded_bits*H',2))) ~= 0))
     % (in the log domain)
     for i=1:M
         v_nodes = graph.c_nodes(i).v_nodes; % v_nodes connected to a given c_node
-        sumPhi = sum(-log(tanh(abs([v_nodes(:).msg])/2)));
         for j=1:length(v_nodes)
-            v_nodes_no_j = v_nodes;
-            v_nodes_no_j(j) = []; 
+            v_nodes_no_j = [v_nodes(1:j-1) v_nodes(j+1:end)];
+            alpha_no_j = min(abs([v_nodes_no_j(:).msg]));
             prodXi = prod(sign([v_nodes_no_j(:).msg]));
             idx = v_nodes(j).num;
             nums = [graph.v_nodes(idx).c_nodes(:).num]; % c_nodes connected the v_node
-            alpha_j = -log(tanh(abs(v_nodes(j).msg)/2));
-            Lrji = prodXi * (-log(tanh((sumPhi - alpha_j)/2)))
+            Lrji = prodXi * alpha_no_j
             for k=1:length(nums)
                 % to get relative index of v_node with respect to c_node
                 if nums(k) == i

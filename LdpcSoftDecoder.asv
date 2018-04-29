@@ -5,9 +5,9 @@ decoded_bits = bits_rx;
 Lci = (-2/noiseVar)*bits_rx;
 % first step: 
 % initialize the v_nodes
-for i=1:N
-    graph.v_nodes(i).msg = Lci;
-end
+% for i=1:N
+%     graph.v_nodes(i).msg = Lci;
+% end
 % then communicate the msg to c_nodes
 for i=1:N
     c_nodes = graph.v_nodes(i).c_nodes; % c_nodes connected to a given v_node
@@ -17,7 +17,7 @@ for i=1:N
         for k=1:length(nums)
             % to get relative index of v_node with respect to c_node
             if nums(k) == i
-                graph.c_nodes(idx).v_nodes(k).msg = graph.v_nodes(i).msg;
+                graph.c_nodes(idx).v_nodes(k).msg = Lci(i);
             end
         end
     end
@@ -29,15 +29,15 @@ while ((it < numIt) && (length(find(mod(decoded_bits*H',2))) ~= 0))
     % (in the log domain)
     for i=1:M
         v_nodes = graph.c_nodes(i).v_nodes; % v_nodes connected to a given c_node
-        sumPhi = sum(-log(tanh(abs([v_nodes(:).msg])/2)));
+        alpha = abs([v_nodes(:).msg]);
         for j=1:length(v_nodes)
-            v_nodes_no_j = v_nodes;
-            v_nodes_no_j(j) = []; 
+            alpha_no_j = min([alpha(1:j-1) alpha(j+1:end)]);
+            v_nodes_no_j = [v_nodes(1:j-1) v_nodes(j+1:end)];
+            
             prodXi = prod(sign([v_nodes_no_j(:).msg]));
             idx = v_nodes(j).num;
             nums = [graph.v_nodes(idx).c_nodes(:).num]; % c_nodes connected the v_node
-            alpha_j = -log(tanh(abs(v_nodes(j).msg)/2));
-            Lrji = prodXi * (-log(tanh((sumPhi - alpha_j)/2)));
+            Lrji = prodXi * alpha_no_j
             for k=1:length(nums)
                 % to get relative index of v_node with respect to c_node
                 if nums(k) == i
@@ -65,13 +65,11 @@ while ((it < numIt) && (length(find(mod(decoded_bits*H',2))) ~= 0))
             end
         end
         if softDecision < 0
-            graph.v_nodes(i).msg = 1;
+            decoded_bits(i) = 1;
         else
-            graph.v_nodes(i).msg = 0;
+            decoded_bits(i) = 0;
         end
     end
-
-    decoded_bits = [graph.v_nodes(:).msg];
     it = it + 1;
 end
 
