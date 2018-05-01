@@ -14,7 +14,7 @@ Nbps = 1; % number of bits per symbol
 modulation = 'pam'; % type of modulation 
 beta = 0.3; % roll-off factor
 
-Npackets = 1; % choose such that Nbits/Nbps is an integer
+Npackets = 300; % choose such that Nbits/Nbps is an integer
 packetLength = 128;
 codedWordLength = 2*packetLength;
 Nbits = Npackets*packetLength; % bit stream length
@@ -31,15 +31,14 @@ for k=1:Npackets
 end
 
 %% Mapping of encoded signal
-signal = mapping(bits_tx,Nbps,modulation);
+% signal = mapping(bits_tx,Nbps,modulation);
 signal_coded = mapping(bits_tx_coded,Nbps,modulation);
 
 %% Upsampling
 signal_tx = upsample(signal_coded,M);
 
 %% Implementation of Nyquist Filter
-% RRCtaps = 365;
-RRCtaps =  1*M+1; 
+RRCtaps = 365;
 stepoffset = (1/RRCtaps)*fsampling;
 highestfreq = (RRCtaps-1)*stepoffset/2;
 f = linspace(-highestfreq,highestfreq,RRCtaps);
@@ -84,28 +83,63 @@ signal_hrrc_tx = conv(signal_tx, h_time);
 % 
 % % signal_hhrc_rx_trunc = signal_hhrc_rx(RRCtaps:end-RRCtaps+1);
 
-%% Noise through the channel
+% %% Noise through the channel
+% signal_power = (trapz(abs(signal_hrrc_tx).^2))*(1/fsampling); % total power
+% Eb = signal_power*0.5/(Npackets*codedWordLength); % energy per bit
+% EbN0 = 5; % SNR (parameter) in dB
+% N0 = Eb/(10.^(EbN0/10));
+% NoisePower = 2*N0*fsampling;
+% noise = sqrt(NoisePower/2)*(randn(length(signal_hrrc_tx),1)+1i*randn(length(signal_hrrc_tx),1));
+% 
+% signal_rx = signal_hrrc_tx + noise;
+% signal_hhrc_rx = conv(signal_rx, h_time);
+% signal_hhrc_rx_trunc = signal_hhrc_rx(RRCtaps:end-RRCtaps+1);
+% 
+% %% Downsampling
+% signal_rx_down = downsample(signal_hhrc_rx_trunc, M);
+% 
+% %% Soft Decoding
+% [bits_rx,it] = LdpcSoftDecoder2(real(signal_rx_down), H, N0, 30);
+% 
+% %% Check bits_rx
+% % if bits_rx == bits_tx
+% %     disp('ok')
+% % end
+% it
+% err = sum(abs(bits_tx-bits_rx))
+% toc
+
+
+%% BER 
+% Noise through the channel
+EbN0 = -10:10; % SNR (parameter)
+BER = zeros(length(EbN0),1);
 signal_power = (trapz(abs(signal_hrrc_tx).^2))*(1/fsampling); % total power
 Eb = signal_power*0.5/(Npackets*codedWordLength); % energy per bit
-EbN0 = 5; % SNR (parameter)
-N0 = Eb/(10.^(EbN0/10));
-NoisePower = 2*N0*fsampling;
-noise = sqrt(NoisePower/2)*(randn(length(signal_hrrc_tx),1)+1i*randn(length(signal_hrrc_tx),1));
 
-signal_rx = signal_hrrc_tx + noise;
-signal_hhrc_rx = conv(signal_rx, h_time);
-signal_hhrc_rx_trunc = signal_hhrc_rx(RRCtaps:end-RRCtaps+1);
+for j = 1:length(EbN0)
+    N0 = Eb/10.^(EbN0(j)/10);
+    NoisePower = 2*N0*fsampling;
+    noise = sqrt(NoisePower/2)*(randn(length(signal_hrrc_tx),1)+1i*randn(length(signal_hrrc_tx),1));
+    signal_rx = signal_hrrc_tx + noise;
+    signal_hhrc_rx = conv(signal_rx, h_time);
+    signal_hhrc_rx_trunc = signal_hhrc_rx(RRCtaps:end-RRCtaps+1);
+    
+    %% Downsampling
+    signal_rx_down = downsample(signal_hhrc_rx_trunc, M);
 
-%% Downsampling
-signal_rx_down = downsample(signal_hhrc_rx_trunc, M);
+    %% Soft Decoding
+    real_signal_rx_down = real(signal_rx_down);
+    bits_rx = [];
+    for k=1:Npackets
+        packets_rx = real_signal_rx_down(1+(k-1)*codedWordLength:k*codedWordLength);
+        bits_rx = [bits_rx LdpcSoftDecoder2(packets_rx, H, N0, 5)'];
+    end
+    
+    %% BER
+    BER(j) = length(find(bits_tx ~= bits_rx'))/length(bits_tx);
+%     err = sum(abs(bits_tx-bits_rx'));
+end
 
-%% Soft Decoding
-[bits_rx,it] = LdpcSoftDecoder2(real(signal_rx_down), H, N0, 200);
-
-%% Check bits_rx
-% if bits_rx == bits_tx
-%     disp('ok')
-% end
-it
-err = sum(abs(bits_tx-bits_rx))
-toc
+semilogy(EbN0,BER)
+grid on

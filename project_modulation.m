@@ -2,10 +2,10 @@
 addpath(genpath('Code encodeur'));
 addpath(genpath('Code mapping-demapping'));
 clear; close all;
-
+tic
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %RANDOM BITS
-Nbits = 30000; % bit stream length
+Nbits = 300000; % bit stream length
 bits_tx = randi(2,Nbits,1)-1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 f_cut = 1e+6; % cut off frequency of the nyquist filter [Mhz]
@@ -24,7 +24,7 @@ signal = mapping(bits_tx,Nbps,modulation);
 signal_tx = upsample(signal,M);
 
 %% implementation of transfer function
-RRCtaps = 165;
+RRCtaps = 365;
 stepoffset = (1/RRCtaps)*fsampling;
 highestfreq = (RRCtaps-1)*stepoffset/2;
 f = linspace(-highestfreq,highestfreq,RRCtaps);
@@ -84,7 +84,7 @@ end
 
 semilogy(EbN0,BER)
 grid on
-
+toc
 % if bits_rx == bits_tx
 %     disp('ok')
 % end
