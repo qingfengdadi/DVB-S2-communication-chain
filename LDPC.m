@@ -6,7 +6,7 @@ addpath(genpath('Code mapping-demapping'));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %RANDOM BITS
 tic;
-for Nbps = 2:2:6
+for Nbps = 1:1:1
 Npackets = 50;
 packetLength = 128;
 codedWordLength = 256;
@@ -31,17 +31,17 @@ fsymb = 2*f_cut; % symbol frequency
 fsampling = M*fsymb; % sampling frequency
 Tsymb = 1/fsymb; % time between two symbols
 % Nbps = 4; % number of bits per symbol
-modulation = 'qam'; % type of modulation 
+modulation = 'pam'; % type of modulation 
 beta = 0.3; % roll-off factor
 
-%% mapping of encoded signal
+%% mapping of the uncoded and coded signal
 signal = mapping(bits_tx,Nbps,modulation);
 signal_coded = mapping(bits_tx_coded,Nbps,modulation);
 
 %% upsampling
 signal_tx = upsample(signal_coded,M);
 
-%% implementation of transfer function
+%% implementation of Nyquist Filter
 RRCtaps = 365;
 stepoffset = (1/RRCtaps)*fsampling;
 highestfreq = (RRCtaps-1)*stepoffset/2;
@@ -94,7 +94,7 @@ for i = 0:16
     signal_rx_down = downsample(signal_hhrc_rx_trunc, M);
 
     %% demapping
-    encoded_bits_rx = (demapping(signal_rx_down,Nbps,modulation))';
+    encoded_bits_rx = (demapping(real(signal_rx_down),Nbps,modulation))';
     %% decode the encoded signal
     decoded_bits_rx = [];
     for k=1:Npackets

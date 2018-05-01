@@ -6,10 +6,12 @@ clear; close all;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %RANDOM BITS
 tic;
-for Nbps=2:2:6
+packetLengthSet = [16,32,64,128];
+for p = 1:length(packetLengthSet)
+Nbps = 4;
 Npackets = 60; % choose such that Nbits/Nbps is an integer
-packetLength = 128;
-codedWordLength = 256;
+packetLength = packetLengthSet(p);
+codedWordLength = 2*packetLength;
 Nbits = Npackets*packetLength; % bit stream length
 NcodedBits = Npackets*codedWordLength; % full coded word length
 bits_tx = randi(2,Nbits,1)-1;
@@ -76,7 +78,7 @@ signal_hrrc_tx = conv(signal_tx, h_time);
 % stem(signal_hrrc_tx);
 
 %% Noise through the channel
-EbN0 = 0:16;
+EbN0 = 0:0.1:16;
 BER = zeros(length(EbN0),1);
 signal_power = (trapz(abs(signal_hrrc_tx).^2))*(1/fsampling); % total power
 Eb = signal_power*0.5/NcodedBits; % energy per bit
@@ -106,6 +108,7 @@ for j = 1:length(EbN0)
     %% BER
     BER(j) = length(find(bits_tx ~= decoded_bits_rx'))/length(decoded_bits_rx');
 end
+%%
 semilogy(EbN0,BER); hold on;
 end
 grid on;
