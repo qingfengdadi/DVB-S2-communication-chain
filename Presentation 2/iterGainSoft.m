@@ -15,7 +15,7 @@ Nbps = 1; % number of bits per symbol
 modulation = 'pam'; % type of modulation 
 beta = 0.3; % roll-off factor
 
-Npackets = 300; % choose such that Nbits/Nbps is an integer
+Npackets = 100; % choose such that Nbits/Nbps is an integer
 packetLength = 128;
 codedWordLength = 2*packetLength;
 Nbits = Npackets*packetLength; % bit stream length
@@ -104,7 +104,7 @@ for m = 1:4
         for k=1:Npackets
             packet_rx_demapped = encoded_bits_rx(1+(k-1)*codedWordLength : k*codedWordLength);
             packet_symb_rx = signal_rx_down(1+(k-1)*codedWordLength : k*codedWordLength);
-            decoded_packet_rx = LdpcSoftDecoder(packet_rx_demapped, packet_symb_rx, H, tannerGraph, N0, 10);
+            decoded_packet_rx = LdpcSoftDecoder(packet_rx_demapped, packet_symb_rx, H, tannerGraph, N0, iter(m));
             decoded_bits_rx(1+(k-1)*packetLength:k*packetLength) = decoded_packet_rx(packetLength+1:end);
         end
         BER(j,1+m) = length(find(bits_tx ~= decoded_bits_rx))/length(decoded_bits_rx);
