@@ -33,87 +33,28 @@ end
 tannerGraph = buildTannerGraph(H);
 
 %% Mapping of encoded signal
-% signal = mapping(bits_tx,Nbps,modulation);
 signal_coded = mapping(bits_tx_coded,Nbps,modulation);
 
 %% Upsampling
 signal_tx = upsample(signal_coded,M);
 
-%% Implementation of Nyquist Filter
+%% Implementation of HHRC
 RRCtaps = 365;
 stepoffset = (1/RRCtaps)*fsampling;
 highestfreq = (RRCtaps-1)*stepoffset/2;
 f = linspace(-highestfreq,highestfreq,RRCtaps);
-Hrrc = HRRC(f,Tsymb,beta);
-h_t = ifft(Hrrc);
+Hrc = HRC(f,Tsymb,beta);
+h_t = ifft(Hrc);
 h_freq = sqrt(fft(h_t/max(h_t)));
-
-% figure;
-% plot(f,h_freq);
 
 h_time = fftshift(ifft(ifftshift(h_freq)));
 deltat = 1/fsampling;
 t = (-(RRCtaps-1)/2:(RRCtaps-1)/2)*deltat;
 
-% figure;
-% plot(t,h_time);
-% hold on
-% plot(t+Tsymb,h_time);
-% hold on
-% plot(t+2*Tsymb,h_time);
-% hold on
-% plot(t+3*Tsymb,h_time);
-% hold on
-% plot(t+4*Tsymb,h_time);
-% grid on;
-
 %% Convolution
 signal_hrrc_tx = conv(signal_tx, h_time);
-% figure;
-% stem(signal_hrrc_tx);
 
-%% Noise through the channel
-% SNR = 5;
-% SignalEnergy = (trapz(abs(signal_hrrc_tx).^2))*(1/fsampling);
-% Eb = 0.5*SignalEnergy/(Npackets*codedWordLength);
-% N0 = Eb/(10^(SNR/10));
-% NoisePower = 2*N0*fsampling;
-% noise = sqrt(NoisePower/2)*(randn(length(signal_hrrc_tx),1)+1i*randn(length(signal_hrrc_tx),1));
-% 
-% signal_rx = signal_hrrc_tx + noise;
-% signal_hhrc_rx = conv(signal_rx, h_time);
-% 
-% % signal_hhrc_rx_trunc = signal_hhrc_rx(RRCtaps:end-RRCtaps+1);
-
-% %% Noise through the channel
-% signal_power = (trapz(abs(signal_hrrc_tx).^2))*(1/fsampling); % total power
-% Eb = signal_power*0.5/(Npackets*codedWordLength); % energy per bit
-% EbN0 = 5; % SNR (parameter) in dB
-% N0 = Eb/(10.^(EbN0/10));
-% NoisePower = 2*N0*fsampling;
-% noise = sqrt(NoisePower/2)*(randn(length(signal_hrrc_tx),1)+1i*randn(length(signal_hrrc_tx),1));
-% 
-% signal_rx = signal_hrrc_tx + noise;
-% signal_hhrc_rx = conv(signal_rx, h_time);
-% signal_hhrc_rx_trunc = signal_hhrc_rx(RRCtaps:end-RRCtaps+1);
-% 
-% %% Downsampling
-% signal_rx_down = downsample(signal_hhrc_rx_trunc, M);
-% 
-% %% Soft Decoding
-% [bits_rx,it] = LdpcSoftDecoder2(real(signal_rx_down), H, N0, 30);
-% 
-% %% Check bits_rx
-% % if bits_rx == bits_tx
-% %     disp('ok')
-% % end
-% it
-% err = sum(abs(bits_tx-bits_rx))
-% toc
-
-
-%% BER 
-% Noise through the channel
+%% BER
 EbN0 = -5:10; % SNR (parameter)
 BER = zeros(length(EbN0),1);
 signal_power = (trapz(abs(signal_hrrc_tx).^2))*(1/fsampling); % total power

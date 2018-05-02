@@ -15,32 +15,13 @@ Nbps = 1; % number of bits per symbol
 modulation = 'pam'; % type of modulation 
 beta = 0.3; % roll-off factor
 
-% Npackets = 60; % choose such that Nbits/Nbps is an integer
-% packetLength = 128;
-% codedWordLength = 2*packetLength;
-% Nbits = Npackets*packetLength; % bit stream length
-% NcodedBits = Npackets*codedWordLength; % full coded word length
-% bits_tx = randi(2,Nbits,1)-1;
-% bits_tx_coded = zeros(NcodedBits,1);
-
-%% LDPC encoder
-% H0 = makeLdpc(packetLength, codedWordLength, 0, 1, 3);
-% for k=1:Npackets
-%     packet_tx = bits_tx(1+(k-1)*packetLength : k*packetLength);
-%     [codedbits, H] = makeParityChk(packet_tx , H0, 0);
-%     bits_tx_coded(1+(k-1)*codedWordLength : k*codedWordLength) = [codedbits packet_tx];
-% end
-% tannerGraph = buildTannerGraph(H);
-
 %% Mapping of encoded signal
 H = [0 1 0 1 1 0 0 1;
      1 1 1 0 0 1 0 0;
      0 0 1 0 0 1 1 1;
      1 0 0 1 1 0 1 0];
 graph = buildTannerGraph(H);
-bits_rx = [1 1 0 1 0 1 0 1];
 bits_tx_coded = [1 0 0 1 0 1 0 1]';
-% signal = mapping(bits_tx,Nbps,modulation);
 signal_coded = mapping(bits_tx_coded,Nbps,modulation);
 
 %% Upsampling
@@ -51,36 +32,16 @@ RRCtaps = 365;
 stepoffset = (1/RRCtaps)*fsampling;
 highestfreq = (RRCtaps-1)*stepoffset/2;
 f = linspace(-highestfreq,highestfreq,RRCtaps);
-Hrrc = HRRC(f,Tsymb,beta);
-h_t = ifft(Hrrc);
+Hrc = HRC(f,Tsymb,beta);
+h_t = ifft(Hrc);
 h_freq = sqrt(fft(h_t/max(h_t)));
 h_time = fftshift(ifft(ifftshift(h_freq)));
 
-%% Plot HHRC
-% deltat = 1/fsampling;
-% t = (-(RRCtaps-1)/2:(RRCtaps-1)/2)*deltat;
-% figure;
-% plot(f,h_freq);
-
-% figure;
-% plot(t,h_time);
-% hold on
-% plot(t+Tsymb,h_time);
-% hold on
-% plot(t+2*Tsymb,h_time);
-% hold on
-% plot(t+3*Tsymb,h_time);
-% hold on
-% plot(t+4*Tsymb,h_time);
-% grid on;
-
 %% Convolution
 signal_hrrc_tx = conv(signal_tx, h_time);
-% figure;
-% stem(signal_hrrc_tx);
 
 %% Noise through the channel
-EbN0 = -1;
+EbN0 = 2;
 signal_power = (trapz(abs(signal_hrrc_tx).^2))*(1/fsampling); % total power
 Eb = signal_power*0.5/(length(bits_tx_coded)); % energy per bit
 
@@ -95,16 +56,10 @@ signal_hhrc_rx_trunc = signal_hhrc_rx(RRCtaps:end-RRCtaps+1);
 %% Downsampling
 signal_rx_down = downsample(signal_hhrc_rx_trunc, M);
 
-% %% Demapping
+%% Demapping
 encoded_bits_rx = (demapping(real(signal_rx_down),Nbps,modulation))';
-% 
-% %% Hard Decoding
-% decoded_bits_rx = zeros(Nbits,1);
-% for k=1:Npackets
-%     packet_rx = encoded_bits_rx(1+(k-1)*codedWordLength : k*codedWordLength);
-%     decoded_packet_rx = LdpcHardDecoder(packet_rx, H, tannerGraph, 10);
-%     decoded_bits_rx(1+(k-1)*packetLength:k*packetLength) = decoded_packet_rx(packetLength+1:end);
-% end
+
+%% Soft Decoding
 decoded_bits_rx = LdpcSoftDecoder(encoded_bits_rx, signal_rx_down, H, graph, N0, 10)';
 
 %% Compare TX and RX
