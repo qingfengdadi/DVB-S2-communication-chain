@@ -3,6 +3,7 @@ addpath(genpath('Code encodeur'));
 addpath(genpath('Code decodeur'));
 addpath(genpath('Code mapping-demapping'));
 addpath(genpath('Code HRC'));
+addpath(genpath('Data'));
 clear; close all;
 
 %% Parameters
@@ -111,7 +112,7 @@ for m = 1:4
 end
 
 %% Plot BER results
-% load BER_iterHardBPSK.mat; load EB_N0_iterHardBPSK.mat
+load BER_iterHardBPSK.mat; load EB_N0_iterHardBPSK.mat
 semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'-o',EbN0,BER(:,5),'-o');
 xlabel('E_B/N_0 [dB]');
 ylabel('BER');
