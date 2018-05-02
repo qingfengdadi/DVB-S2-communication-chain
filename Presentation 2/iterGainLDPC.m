@@ -126,11 +126,14 @@ for m = 1:4
             decoded_packet_rx = LdpcHardDecoder(packet_rx, H, tannerGraph, iter(m));
             decoded_bits_rx(1+(k-1)*packetLength:k*packetLength) = decoded_packet_rx(packetLength+1:end);
         end
-        BER(j,1+m) = length(find(bits_tx ~= decoded_bits_rx'))/length(decoded_bits_rx');
+        BER(j,1+m) = length(find(bits_tx ~= decoded_bits_rx))/length(decoded_bits_rx);
     end
 end
 
 %% Plot BER results
-semilogy(EbN0,BER(:,1),'-o',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'-o',EbN0,BER(:,5),'-o');
+load BER_iter.mat; load EB_N0_iter.mat
+semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'-o',EbN0,BER(:,5),'-o');
+xlabel('E_B/N_0 [dB]');
+ylabel('BER');
 legend('Uncoded','it = 1','it = 4','it = 7','it = 10');
 grid on;

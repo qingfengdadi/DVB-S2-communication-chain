@@ -73,7 +73,7 @@ signal_hrrc_tx = conv(signal_tx, h_time);
 % stem(signal_hrrc_tx);
 
 %% Noise through the channel
-EbN0 = 10;
+EbN0 = 5;
 signal_power = (trapz(abs(signal_hrrc_tx).^2))*(1/fsampling); % total power
 Eb = signal_power*0.5/(Npackets*codedWordLength); % energy per bit
 
@@ -95,7 +95,7 @@ encoded_bits_rx = (demapping(signal_rx_down,Nbps,modulation))';
 decoded_bits_rx = zeros(Nbits,1);
 for k=1:Npackets
     packet_rx = encoded_bits_rx(1+(k-1)*codedWordLength : k*codedWordLength);
-    decoded_packet_rx = LdpcHardDecoder(packet_rx, H, tannerGraph, 10);
+    decoded_packet_rx = LdpcHardDecoder(packet_rx, H, tannerGraph, 2);
     decoded_bits_rx(1+(k-1)*packetLength:k*packetLength) = decoded_packet_rx(packetLength+1:end);
 end
 
