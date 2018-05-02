@@ -12,10 +12,10 @@ fsymb = 2*f_cut; % symbol frequency
 fsampling = M*fsymb; % sampling frequency
 Tsymb = 1/fsymb; % time between two symbols
 Nbps = 1; % number of bits per symbol
-modulation = 'pam'; % type of modulation 
+modulation = ''; % type of modulation 
 beta = 0.3; % roll-off factor
 
-Npackets = 300; % choose such that Nbits/Nbps is an integer
+Npackets = 1; % choose such that Nbits/Nbps is an integer
 packetLength = 128;
 codedWordLength = 2*packetLength;
 Nbits = Npackets*packetLength; % bit stream length
@@ -71,7 +71,7 @@ for j = 1:length(EbN0)
     signal_hhrc_rx_trunc = signal_hhrc_rx(RRCtaps:end-RRCtaps+1);
 
     %% Downsampling
-    signal_rx_down = real(downsample(signal_hhrc_rx_trunc, M));
+    signal_rx_down = downsample(signal_hhrc_rx_trunc, M);
 
     %% Demapping
     uncoded_bits_rx = (demapping(signal_rx_down,Nbps,modulation))';
@@ -94,7 +94,7 @@ for m = 1:4
         signal_hhrc_rx_trunc = signal_hhrc_rx(RRCtaps:end-RRCtaps+1);
 
         %% Downsampling
-        signal_rx_down = real(downsample(signal_hhrc_rx_trunc, M));
+        signal_rx_down = downsample(signal_hhrc_rx_trunc, M);
 
         %% Demapping
         encoded_bits_rx = (demapping(signal_rx_down,Nbps,modulation))';
@@ -111,10 +111,9 @@ for m = 1:4
 end
 
 %% Plot BER results
-% load BER_iterHardBPSK.mat; load EB_N0_iterHardBPSK.mat
+load BER_iter.mat; load EB_N0_iter.mat
 semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'-o',EbN0,BER(:,5),'-o');
 xlabel('E_B/N_0 [dB]');
 ylabel('BER');
 legend('Uncoded','it = 1','it = 4','it = 7','it = 10');
-title('Hard Decoding BPSK')
 grid on;
