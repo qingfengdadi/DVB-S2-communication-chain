@@ -8,7 +8,7 @@ H = [1 1 0 1 1 0 0 1 0 0;
      0 0 0 1 0 0 0 1 1 1;
      1 1 0 0 0 1 1 0 1 0;
      0 0 1 0 0 1 0 1 0 1];
-
+ 
 % Build H such that H = [I P']
 H(2,:) = xor(H(2,:),H(5,:));
 H(1,:) = xor(H(1,:),H(3,:));
@@ -29,9 +29,7 @@ G = [P eye(5)];
 
 message_vector = [0 1 1 0 1];
 u = mod(message_vector*G,2) % code vector = [0 1 0 0 0 0 1 1 0 1]
-r = [0 1 0 0 0 1 1 1 0 1]; % received vector
+r = [0 1 0 0 0 0 1 1 1 1]; % received vector
 
 graph = buildTannerGraph(H);
 u_ = LdpcHardDecoder(r, H, graph, 15) % corrected vector
-
-
