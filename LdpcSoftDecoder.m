@@ -35,7 +35,7 @@ while ((it < numIt) && (length(find(mod(decoded_bits*H',2))) ~= 0))
             prodXi = prod(sign([v_nodes_no_j(:).msg]));
             idx = v_nodes(j).num;
             nums = [graph.v_nodes(idx).c_nodes(:).num]; % c_nodes connected the v_node
-            Lrji = prodXi * alpha_no_j
+            Lrji = prodXi * alpha_no_j;
             for k=1:length(nums)
                 % to get relative index of v_node with respect to c_node
                 if nums(k) == i
@@ -50,7 +50,7 @@ while ((it < numIt) && (length(find(mod(decoded_bits*H',2))) ~= 0))
     % msg using a majoroty vote
     for i=1:N
         c_nodes = graph.v_nodes(i).c_nodes;
-        softDecision = Lci + sum([c_nodes(:).msg]);
+        softDecision = Lci(i) + sum([c_nodes(:).msg]);
         for j=1:length(c_nodes)
             idx = c_nodes(j).num; % get the global c_node index
             nums = [graph.c_nodes(idx).v_nodes(:).num];  % v_nodes connected the c_node
