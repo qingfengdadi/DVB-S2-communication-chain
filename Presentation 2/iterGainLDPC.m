@@ -2,7 +2,7 @@
 addpath(genpath('Code encodeur'));
 addpath(genpath('Code decodeur'));
 addpath(genpath('Code mapping-demapping'));
-addpath(genpath('Code HRRC'));
+addpath(genpath('Code HRC'));
 clear; close all;
 
 %% Parameters
@@ -15,7 +15,7 @@ Nbps = 2; % number of bits per symbol
 modulation = 'qam'; % type of modulation 
 beta = 0.3; % roll-off factor
 
-Npackets = 300; % choose such that Nbits/Nbps is an integer
+Npackets = 1; % choose such that Nbits/Nbps is an integer
 packetLength = 128;
 codedWordLength = 2*packetLength;
 Nbits = Npackets*packetLength; % bit stream length
@@ -45,34 +45,14 @@ RRCtaps = 365;
 stepoffset = (1/RRCtaps)*fsampling;
 highestfreq = (RRCtaps-1)*stepoffset/2;
 f = linspace(-highestfreq,highestfreq,RRCtaps);
-Hrrc = HRRC(f,Tsymb,beta);
-h_t = ifft(Hrrc);
+Hrc = HRC(f,Tsymb,beta);
+h_t = ifft(Hrc);
 h_freq = sqrt(fft(h_t/max(h_t)));
 h_time = fftshift(ifft(ifftshift(h_freq)));
-
-%% Plot HHRC
-% deltat = 1/fsampling;
-% t = (-(RRCtaps-1)/2:(RRCtaps-1)/2)*deltat;
-% figure;
-% plot(f,h_freq);
-
-% figure;
-% plot(t,h_time);
-% hold on
-% plot(t+Tsymb,h_time);
-% hold on
-% plot(t+2*Tsymb,h_time);
-% hold on
-% plot(t+3*Tsymb,h_time);
-% hold on
-% plot(t+4*Tsymb,h_time);
-% grid on;
 
 %% Convolution
 signal_hrrc_tx_uncoded = conv(signal_tx_uncoded, h_time);
 signal_hrrc_tx = conv(signal_tx, h_time);
-% figure;
-% stem(signal_hrrc_tx);
 
 %% Noise through the channel uncoded
 EbN0 = -5:16;
