@@ -41,7 +41,7 @@ h_time = fftshift(ifft(ifftshift(h_freq)));
 signal_hrrc_tx = conv(signal_tx, h_time);
 
 %% Noise through the channel
-EbN0 = 2;
+EbN0 = -2;
 signal_power = (trapz(abs(signal_hrrc_tx).^2))*(1/fsampling); % total power
 Eb = signal_power*0.5/(length(bits_tx_coded)); % energy per bit
 
