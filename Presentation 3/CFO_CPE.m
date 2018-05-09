@@ -46,7 +46,7 @@ signal_tx_uncoded = upsample(signal_uncoded,M);
 % signal_tx = upsample(signal_coded,M);
 
 %% Implementation of HHRC
-RRCtaps = 65;
+RRCtaps = 365;
 stepoffset = (1/RRCtaps)*fsampling;
 highestfreq = (RRCtaps-1)*stepoffset/2;
 f = linspace(-highestfreq,highestfreq,RRCtaps);
