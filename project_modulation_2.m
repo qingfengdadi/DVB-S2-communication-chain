@@ -13,7 +13,7 @@ M = 8; % oversampling factor
 fsymb = 2*f_cut; % symbol frequency
 fsampling = M*fsymb; % sampling frequency
 Tsymb = 1/fsymb; % time between two symbols
-Nbps = 4; % number of bits per symbol
+Nbps = 2; % number of bits per symbol
 modulation = 'qam'; % type of modulation 
 beta = 0.3; % roll-off factor
 
