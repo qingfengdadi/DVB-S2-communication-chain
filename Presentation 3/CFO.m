@@ -62,10 +62,10 @@ for m = 1:length(CFO_values)
         signal_rx = signal_tx + noise;
         signal_rx = signal_rx.*exp_cfo1;
         signal_rx = conv(signal_rx, h_time);
-        signal_rx_trunc = signal_rx(RRCtaps:end-RRCtaps+1);
+        symbol_rx_upsampled = signal_rx(RRCtaps:end-RRCtaps+1);
 
         %% Downsampling
-        symbol_rx = downsample(signal_rx_trunc, M);
+        symbol_rx = downsample(symbol_rx_upsampled, M);
         
         exp_cfo2 = exp(-1j*(2*pi*CFO_values(m)*(0:length(symbol_rx)-1)*M*ts))';
         symbol_rx = symbol_rx.*exp_cfo2;
@@ -88,22 +88,22 @@ title('CFO')
 grid on;
 
 %% Plot Constellation results for SNR = 20 
-scatterplot(symbol_tx,1,0,'r.',Hrc)          
+scatterplot(symbol_tx,1,0,'r.')          
 title('TX Symbols')
 grid on
 
-scatterplot(scatterData(:,1),1,0,'r.',Hrc)          
+scatterplot(scatterData(:,1),1,0,'r.')          
 title('CFO = 0 ppm')
 grid on
  
-scatterplot(scatterData(:,2),1,0,'r.',Hrc)     
+scatterplot(scatterData(:,2),1,0,'r.')     
 title('CFO = 10 ppm')
 grid on
     
-scatterplot(scatterData(:,3),1,0,'r.',Hrc)         
+scatterplot(scatterData(:,3),1,0,'r.')         
 title('CFO = 40 ppm')
 grid on
       
-scatterplot(scatterData(:,4),1,0,'r.',Hrc)         
+scatterplot(scatterData(:,4),1,0,'r.')         
 title('CFO = 70 ppm')
 grid on
