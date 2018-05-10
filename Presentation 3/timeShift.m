@@ -7,8 +7,9 @@ addpath(genpath('Code HRC'));
 clear; close all;
 
 %% Parameters
-f_cut = 1e+6/2; % cut off frequency of the nyquist filter [Mhz]
-M = 8; % oversampling factor (mettre à 100?)
+Nbits = 50000; % bit stream length
+f_cut = 1e6/2; % cut off frequency of the nyquist filter [Mhz]
+M = 100; % oversampling factor (mettre à 100?)
 fsymb = 2*f_cut; % symbol frequency
 fsampling = M*fsymb; % sampling frequency
 ts = 1/fsampling;
@@ -16,22 +17,18 @@ Tsymb = 1/fsymb; % time between two symbols
 beta = 0.3; % roll-off factor
 Nbps = 4; % number of bits per symbol
 modulation = 'qam'; % type of modulation 
-
-Nbits = 30000; % bit stream length
 bits_tx = randi(2,Nbits,1)-1;
 
-fc = 2e+9;
-CFO_values = [0 10 40 70]*fc*1e-6;
-phi0 = 0;
+tshift_values = [1 3 6 11];
 
-%% Mapping of encoded signal
+%% Mapping
 symbol_tx = mapping(bits_tx,Nbps,modulation);
 
 %% Upsampling
 symbol_tx_upsampled = upsample(symbol_tx,M);
 
 %% Implementation of HHRC
-RRCtaps = 365;
+RRCtaps = Nbps*M+101;
 stepoffset = (1/RRCtaps)*fsampling;
 highestfreq = (RRCtaps-1)*stepoffset/2;
 f = linspace(-highestfreq,highestfreq,RRCtaps);
@@ -43,7 +40,7 @@ h_time = fftshift(ifft(ifftshift(h_freq)));
 %% Convolution
 signal_tx = conv(symbol_tx_upsampled, h_time);
 
-%% Noise through the channel coded
+%% Noise through the channel
 EbN0 = -4:0.5:20;
 BER = zeros(length(EbN0),4);
 scatterData = zeros(length(symbol_tx),4);
@@ -51,24 +48,18 @@ scatterData = zeros(length(symbol_tx),4);
 signal_power = (trapz(abs(signal_tx).^2))*(1/fsampling); % total power
 Eb = signal_power*0.5/Nbits; % energy per bit
 
-for m = 1:length(CFO_values)
+for m = 1:length(tshift_values)
     for j = 1:length(EbN0)
         N0 = Eb/10.^(EbN0(j)/10);
         NoisePower = 2*N0*fsampling;
         noise = sqrt(NoisePower/2)*(randn(length(signal_tx),1)+1i*randn(length(signal_tx),1));
-    
-        exp_cfo1 = exp(1j*(2*pi*CFO_values(m)*((0:length(signal_tx)-1)-(RRCtaps-1)/2)*ts+phi0))';
            
         signal_rx = signal_tx + noise;
-        signal_rx = signal_rx.*exp_cfo1;
         signal_rx = conv(signal_rx, h_time);
         symbol_rx_upsampled = signal_rx(RRCtaps:end-RRCtaps+1);
 
         %% Downsampling
-        symbol_rx = downsample(symbol_rx_upsampled, M);
-        
-        exp_cfo2 = exp(-1j*(2*pi*CFO_values(m)*(0:length(symbol_rx)-1)*M*ts))'; %compensation
-        symbol_rx = symbol_rx.*exp_cfo2;
+        symbol_rx = symbol_rx_upsampled(tshift_values(m):M:end);
         
         %% Demapping
         bits_rx = (demapping(symbol_rx,Nbps,modulation))';
@@ -80,30 +71,26 @@ end
 
 %% Plot BER results
 figure
-semilogy(EbN0,BER(:,1),'-o',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'-o');
+semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'-o');
 xlabel('E_B/N_0 [dB]');
 ylabel('BER');
-legend('CFO = 0 ppm','CFO = 10 ppm','CFO = 40 ppm','CFO = 70 ppm');
-title('CFO')
+legend('t_0 = 0','t_0 = 2','t_0 = 5','t_0 = 10');
+title('Time Shift')
 grid on;
 
 %% Plot Constellation results for SNR = 20 
-scatterplot(symbol_tx,1,0,'r.')          
-title('TX Symbols')
-grid on
-
 scatterplot(scatterData(:,1),1,0,'r.')          
-title('CFO = 0 ppm')
+title('Time Shift t_0 = 0')
 grid on
  
 scatterplot(scatterData(:,2),1,0,'r.')     
-title('CFO = 10 ppm')
+title('Time Shift t_0 = 2')
 grid on
     
 scatterplot(scatterData(:,3),1,0,'r.')         
-title('CFO = 40 ppm')
+title('Time Shift t_0 = 5')
 grid on
       
 scatterplot(scatterData(:,4),1,0,'r.')         
-title('CFO = 70 ppm')
+title('Time Shift t_0 = 10')
 grid on
