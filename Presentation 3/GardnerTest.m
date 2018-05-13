@@ -19,7 +19,7 @@ Nbps = 4; % number of bits per symbol
 modulation = 'qam'; % type of modulation 
 bits_tx = randi(2,Nbits,1)-1;
 
-tshift_values = [0 40];
+tshift_values = [0,40];
 
 %% Mapping
 symbol_tx = mapping(bits_tx,Nbps,modulation);
