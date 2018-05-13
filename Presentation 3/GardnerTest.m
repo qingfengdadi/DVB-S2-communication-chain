@@ -62,12 +62,13 @@ for m = 1:length(tshift_values)
         symbol_rx_upsampled = symbol_rx_upsampled(1+tshift_values(m):end);
         
         %% Gardner
-        K=79e-8/10;
+        K=79e-8*(1/(Tsymb));
         L=length(symbol_rx_upsampled);
         L=L-mod(L,M);
+        
         error=zeros(L/M,1);
         corr=zeros(L/M,1);
-        sign_corr = zeros(L/M,1);
+        
         prevHoho = symbol_rx_upsampled(1);
         
         for i=1:(L/M)-1
@@ -75,12 +76,13 @@ for m = 1:length(tshift_values)
             b=symbol_rx_upsampled(1+(i-1)*M:i*M+1);
             c=M/2+(i-1)*M-error(i);
             c2=i*M-error(i);
+            
             hihi = interp1(a,b,c,'pchip');
-            sign_corr(i) = hihi;
             hoho = interp1(a,b,c2,'pchip');
-            corr(i)=(2*K/(Tsymb))*real(hihi*(conj(hoho) - conj(prevHoho)));
-            prevHoho = hoho;
+            
+            corr(i)=(2*K)*real(hihi*(conj(hoho) - conj(prevHoho)));
             error(i+1) = error(i) + corr(i);
+            prevHoho = hoho;
         end
         
         %% Time shift + Correction shift

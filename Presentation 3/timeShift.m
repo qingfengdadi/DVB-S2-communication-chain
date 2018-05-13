@@ -41,7 +41,7 @@ h_time = fftshift(ifft(ifftshift(h_freq)));
 signal_tx = conv(symbol_tx_upsampled, h_time);
 
 %% Noise through the channel
-EbN0 = -4:0.5:20;
+EbN0 = -4:1:20;
 BER = zeros(length(EbN0),4);
 scatterData = zeros(length(symbol_tx),4);
 
