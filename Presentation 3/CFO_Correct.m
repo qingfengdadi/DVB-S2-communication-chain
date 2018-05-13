@@ -7,9 +7,8 @@ addpath(genpath('Code HRC'));
 clear; close all;
 
 %% Parameters
-Nbits = 10000; % bit stream length
-f_cut = 1e6/2; % cut off frequency of the nyquist filter [Mhz]
-M = 100; % oversampling factor (mettre à 100?)
+f_cut = 1e+6/2; % cut off frequency of the nyquist filter [Mhz]
+M = 8; % oversampling factor (mettre à 100?)
 fsymb = 2*f_cut; % symbol frequency
 fsampling = M*fsymb; % sampling frequency
 ts = 1/fsampling;
@@ -17,18 +16,22 @@ Tsymb = 1/fsymb; % time between two symbols
 beta = 0.3; % roll-off factor
 Nbps = 4; % number of bits per symbol
 modulation = 'qam'; % type of modulation 
+
+Nbits = 30000; % bit stream length
 bits_tx = randi(2,Nbits,1)-1;
 
-tshift_values = [0,40];
+fc = 2e+9;
+CFO_values = [0 10 40 70]*fc*1e-6;
+phi0 = 0;
 
-%% Mapping
+%% Mapping of encoded signal
 symbol_tx = mapping(bits_tx,Nbps,modulation);
 
 %% Upsampling
 symbol_tx_upsampled = upsample(symbol_tx,M);
 
 %% Implementation of HHRC
-RRCtaps = Nbps*M+1;
+RRCtaps = 365;
 stepoffset = (1/RRCtaps)*fsampling;
 highestfreq = (RRCtaps-1)*stepoffset/2;
 f = linspace(-highestfreq,highestfreq,RRCtaps);
@@ -40,60 +43,32 @@ h_time = fftshift(ifft(ifftshift(h_freq)));
 %% Convolution
 signal_tx = conv(symbol_tx_upsampled, h_time);
 
-%% Noise through the channel
-EbN0 = -5:16;
-BER = zeros(length(EbN0),2);
-scatterData = zeros(length(symbol_tx),2);
+%% Noise through the channel coded
+EbN0 = -4:0.5:20;
+BER = zeros(length(EbN0),4);
+scatterData = zeros(length(symbol_tx),4);
 
 signal_power = (trapz(abs(signal_tx).^2))*(1/fsampling); % total power
 Eb = signal_power*0.5/Nbits; % energy per bit
 
-for m = 1:length(tshift_values)
+for m = 1:length(CFO_values)
     for j = 1:length(EbN0)
         N0 = Eb/10.^(EbN0(j)/10);
         NoisePower = 2*N0*fsampling;
         noise = sqrt(NoisePower/2)*(randn(length(signal_tx),1)+1i*randn(length(signal_tx),1));
+    
+        exp_cfo1 = exp(1j*(2*pi*CFO_values(m)*((0:length(signal_tx)-1)-(RRCtaps-1)/2)*ts+phi0))';
            
         signal_rx = signal_tx + noise;
+        signal_rx = signal_rx.*exp_cfo1;
         signal_rx = conv(signal_rx, h_time);
         symbol_rx_upsampled = signal_rx(RRCtaps:end-RRCtaps+1);
-        
-        %% Time shift
-        symbol_rx_upsampled = symbol_rx_upsampled(1+tshift_values(m):end);
-        
-        %% Gardner
-        K=79e-8*(1/(Tsymb));
-        L=length(symbol_rx_upsampled);
-        L=L-mod(L,M);
-        
-        error=zeros(L/M,1);
-        corr=zeros(L/M,1);
-        
-        prevHoho = symbol_rx_upsampled(1);
-        
-        for i=1:(L/M)-1
-            a=((i-1)*M:M*i);
-            b=symbol_rx_upsampled(1+(i-1)*M:i*M+1);
-            c=M/2+(i-1)*M-error(i);
-            c2=i*M-error(i);
-            
-            hihi = interp1(a,b,c,'pchip');
-            hoho = interp1(a,b,c2,'pchip');
-            
-            corr(i)=(2*K)*real(hihi*(conj(hoho) - conj(prevHoho)));
-            error(i+1) = error(i) + corr(i);
-            prevHoho = hoho;
-        end
-        
-        %% Time shift + Correction shift
-        symbol_rx_upsampled = signal_rx(RRCtaps:end-RRCtaps+1);
-        if tshift_values(m) ~= 0
-            timeshift = round(abs(tshift_values(m)-error(end)));
-            symbol_rx_upsampled = symbol_rx_upsampled(1+timeshift:end);
-        end
 
         %% Downsampling
         symbol_rx = downsample(symbol_rx_upsampled, M);
+        
+        exp_cfo2 = exp(-1j*(2*pi*CFO_values(m)*(0:length(symbol_rx)-1)*M*ts))'; %compensation
+        symbol_rx = symbol_rx.*exp_cfo2;
         
         %% Demapping
         bits_rx = (demapping(symbol_rx,Nbps,modulation))';
@@ -105,18 +80,30 @@ end
 
 %% Plot BER results
 figure
-semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o');
+semilogy(EbN0,BER(:,1),'-o',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'-o');
 xlabel('E_B/N_0 [dB]');
 ylabel('BER');
-legend('t_0 = 0','t_0 = 45');
-title('Time Shift')
+legend('CFO = 0 ppm','CFO = 10 ppm','CFO = 40 ppm','CFO = 70 ppm');
+title('CFO')
 grid on;
 
 %% Plot Constellation results for SNR = 20 
+scatterplot(symbol_tx,1,0,'r.')          
+title('TX Symbols')
+grid on
+
 scatterplot(scatterData(:,1),1,0,'r.')          
-title('Time Shift t_0 = 0')
+title('CFO = 0 ppm')
 grid on
  
 scatterplot(scatterData(:,2),1,0,'r.')     
-title('Time Shift t_0 = 20')
+title('CFO = 10 ppm')
+grid on
+    
+scatterplot(scatterData(:,3),1,0,'r.')         
+title('CFO = 40 ppm')
+grid on
+      
+scatterplot(scatterData(:,4),1,0,'r.')         
+title('CFO = 70 ppm')
 grid on
