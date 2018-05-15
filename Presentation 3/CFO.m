@@ -21,7 +21,8 @@ Nbits = 30000; % bit stream length
 bits_tx = randi(2,Nbits,1)-1;
 
 fc = 2e+9;
-CFO_values = [0 10 40 70]*fc*1e-6;
+ppm = fc*1e-6;
+CFO_values = [0 10 40 70]*ppm;
 phi0 = 0;
 
 %% Mapping of encoded signal

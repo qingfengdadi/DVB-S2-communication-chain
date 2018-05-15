@@ -8,13 +8,13 @@ clear; close all;
 
 %% Parameters
 f_cut = 1e+6/2; % cut off frequency of the nyquist filter [Mhz]
-M = 8; % oversampling factor (mettre à 100?)
+M = 100; % oversampling factor (mettre à 100?)
 fsymb = 2*f_cut; % symbol frequency
 fsampling = M*fsymb; % sampling frequency
 ts = 1/fsampling;
 Tsymb = 1/fsymb; % time between two symbols
 beta = 0.3; % roll-off factor
-Nbps = 4; % number of bits per symbol
+Nbps = 2; % number of bits per symbol
 modulation = 'qam'; % type of modulation 
 
 Nbits = 30000; % data bit stream length
@@ -23,11 +23,12 @@ bits_pilot = randi(2,1,Npilot)-1;
 bits_data = randi(2,1,Nbits)-1;
 
 fc = 2e+9;
-% CFO_values = [0 10 40 70]*fc*1e-6;
-CFO_values = 10*fc*1e-6;
+ppm = fc*1e-6;
+% CFO_values = [0 10 40 70]*ppm;
+CFO_values = 1*ppm;
 phi0 = 0;
 
-pilot_pos = 300;
+pilot_pos = 777;
 
 %% Mapping of encoded signal
 symbol_pilot = mapping(bits_pilot',Nbps,modulation);
@@ -66,7 +67,7 @@ for m = 1:length(CFO_values)
     
         exp_cfo1 = exp(1j*(2*pi*CFO_values(m)*((0:length(signal_tx)-1)-(RRCtaps-1)/2)*ts+phi0))';
            
-        signal_rx = signal_tx + noise;
+        signal_rx = signal_tx ;%+ noise;
         signal_rx = signal_rx.*exp_cfo1;
         signal_rx = conv(signal_rx, h_time);
         symbol_rx_upsampled = signal_rx(RRCtaps:end-RRCtaps+1);
@@ -79,7 +80,7 @@ for m = 1:length(CFO_values)
 %         symbol_rx = symbol_rx.*exp_cfo2;
         L = length(symbol_rx);
         N = length(symbol_pilot);
-        k_window = 16;
+        k_window = 18;
         D = zeros(k_window, L-N+1);
         %         D2 = zeros(k_window, L-N+1);
 
@@ -90,29 +91,28 @@ for m = 1:length(CFO_values)
             D(k,:)=D(k,:)/(N-k);
         end
         
-        [max_,est_n] = max(sum(abs(D)));
+        [~,est_n] = max(sum(abs(D)));
         est_cfo = 0;
 
         for k=1:k_window
             est_cfo = est_cfo + angle(D(k,est_n))/(2*pi*k*Tsymb);
         end
-
-        est_n
-        est_cfo = -est_cfo/k_window
-        cfo = CFO_values(m)
-        est_n_vec=abs(est_n-1/Nbps)
-
+        est_cfo = -est_cfo/k_window;
+        
+        exp_cfo2 = exp(-1j*(2*pi*est_cfo*(0:length(symbol_rx)-1)*M*ts))'; %compensation
+        symbol_rx = symbol_rx.*exp_cfo2;
+        symbol_rx = [symbol_rx(1:est_n-1);symbol_data(est_n:end)];
         
         %% Demapping
         bits_rx = (demapping(symbol_rx,Nbps,modulation))';
-%         BER(j,m) = length(find(bits_data ~= bits_rx'))/length(bits_rx');
-        
+        BER = length(find(bits_data ~= bits_rx))/length(bits_rx')
+                
     end
-    scatterData(:,m) = symbol_rx;
+%     scatterData(:,m) = symbol_rx;
 end
 
-figure
-plot(sum(abs(D)));
+% figure
+% plot(sum(abs(D)));
 
 % %% Plot BER results
 % figure
