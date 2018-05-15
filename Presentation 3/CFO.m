@@ -53,12 +53,13 @@ signal_power = (trapz(abs(signal_tx).^2))*(1/fsampling); % total power
 Eb = signal_power*0.5/Nbits; % energy per bit
 
 for m = 1:length(CFO_values)
+    cfo = CFO_values(m);
     for j = 1:length(EbN0)
         N0 = Eb/10.^(EbN0(j)/10);
         NoisePower = 2*N0*fsampling;
         noise = sqrt(NoisePower/2)*(randn(length(signal_tx),1)+1i*randn(length(signal_tx),1));
     
-        exp_cfo1 = exp(1j*(2*pi*CFO_values(m)*((0:length(signal_tx)-1)-(RRCtaps-1)/2)*ts+phi0))';
+        exp_cfo1 = exp(1j*(2*pi*cfo*((0:length(signal_tx)-1)-(RRCtaps-1)/2)*ts+phi0))';
            
         signal_rx = signal_tx + noise;
         signal_rx = signal_rx.*exp_cfo1;
@@ -68,7 +69,7 @@ for m = 1:length(CFO_values)
         %% Downsampling
         symbol_rx = downsample(symbol_rx_upsampled, M);
         
-        exp_cfo2 = exp(-1j*(2*pi*CFO_values(m)*(0:length(symbol_rx)-1)*M*ts))'; %compensation
+        exp_cfo2 = exp(-1j*(2*pi*cfo*(0:length(symbol_rx)-1)*M*ts))'; %compensation
         symbol_rx = symbol_rx.*exp_cfo2;
         
         %% Demapping

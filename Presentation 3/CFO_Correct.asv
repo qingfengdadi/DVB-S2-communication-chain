@@ -17,14 +17,15 @@ beta = 0.3; % roll-off factor
 Nbps = 2; % number of bits per symbol
 modulation = 'qam'; % type of modulation 
 
-Nbits = 800; % data bit stream length
+Nbits = 30000; % data bit stream length
 Npilot = 200; % Number of pilot bits
 bits_pilot = randi(2,1,Npilot)-1;
 bits_data = randi(2,1,Nbits)-1;
 
 fc = 2e+9;
-ppm = fsampling*1e-6;
-CFO_values = [0 10]*ppm;
+ppm = fc*1e-6;
+% CFO_values = [0 10 40 70]*ppm;
+CFO_values = 70*ppm;
 phi0 = 0;
 
 pilot_pos = 200;
@@ -51,21 +52,20 @@ h_time = fftshift(ifft(ifftshift(h_freq)));
 signal_tx = conv(symbol_tx_upsampled, h_time);
 
 %% Noise through the channel coded
-EbN0 = -5:10;
-BER = zeros(length(EbN0),2);
-scatterData = zeros(length(symbol_data),2);
+EbN0 = 5:1:5;
+BER = zeros(length(EbN0),4);
+scatterData = zeros(length(symbol_tx),4);
 
 signal_power = (trapz(abs(signal_tx).^2))*(1/fsampling); % total power
 Eb = signal_power*0.5/Nbits; % energy per bit
 
 for m = 1:length(CFO_values)
-    cfo = CFO_values(m);
     for j = 1:length(EbN0)
         N0 = Eb/10.^(EbN0(j)/10);
         NoisePower = 2*N0*fsampling;
         noise = sqrt(NoisePower/2)*(randn(length(signal_tx),1)+1i*randn(length(signal_tx),1));
     
-        exp_cfo1 = exp(1j*(2*pi*cfo*((0:length(signal_tx)-1)-(RRCtaps-1)/2)*ts+phi0))';
+        exp_cfo1 = exp(1j*(2*pi*CFO_values(m)*((0:length(signal_tx)-1)-(RRCtaps-1)/2)*ts+phi0))';
            
         signal_rx = signal_tx + noise;
         signal_rx = signal_rx.*exp_cfo1;
@@ -96,39 +96,47 @@ for m = 1:length(CFO_values)
         end
         est_cfo = -est_cfo/k_window;
         
-        exp_cfo2 = exp(1j*(2*pi*est_cfo*(0:length(symbol_rx)-1)*M*ts))';
+        exp_cfo2 = exp(-1j*(2*pi*est_cfo*(0:length(symbol_rx)-1)*M*ts))';
         symbol_rx = symbol_rx.*exp_cfo2;
         symbol_rx = [symbol_rx(1:est_n-1);symbol_data(est_n:end)];
         
         %% Demapping
         bits_rx = (demapping(symbol_rx,Nbps,modulation))';
-        BER(j,m) = length(find(bits_data ~= bits_rx))/length(bits_rx');
+        BER = length(find(bits_data ~= bits_rx))/length(bits_rx')
                 
     end
-    scatterData(:,m) = symbol_rx;
+%     scatterData(:,m) = symbol_rx;
 end
 
 % figure
 % plot(sum(abs(D)));
 
-%% Plot BER results
-figure
-semilogy(EbN0,BER(:,1),'-o',EbN0,BER(:,2),'-o');
-xlabel('E_B/N_0 [dB]');
-ylabel('BER');
-legend('CFO = 0 ppm','CFO = 20 ppm');
-title('CFO')
-grid on;
-
-%% Plot Constellation results for SNR = 20 
-scatterplot(symbol_data,1,0,'r.')          
-title('TX Symbols')
-grid on
-
-scatterplot(scatterData(:,1),1,0,'r.')          
+% %% Plot BER results
+% figure
+% semilogy(EbN0,BER(:,1),'-o',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'-o');
+% xlabel('E_B/N_0 [dB]');
+% ylabel('BER');
+% legend('CFO = 0 ppm','CFO = 10 ppm','CFO = 40 ppm','CFO = 70 ppm');
+% title('CFO')
+% grid on;
+% 
+% %% Plot Constellation results for SNR = 20 
+% scatterplot(symbol_tx,1,0,'r.')          
+% title('TX Symbols')
+% grid on
+% 
+scatterplot(symbol_rx,1,0,'r.')          
 title('CFO = 0 ppm')
 grid on
- 
-scatterplot(scatterData(:,2),1,0,'r.')     
-title('CFO = 20 ppm')
-grid on
+%  
+% scatterplot(scatterData(:,2),1,0,'r.')     
+% title('CFO = 10 ppm')
+% grid on
+%     
+% scatterplot(scatterData(:,3),1,0,'r.')         
+% title('CFO = 40 ppm')
+% grid on
+%       
+% scatterplot(scatterData(:,4),1,0,'r.')         
+% title('CFO = 70 ppm')
+% grid on
