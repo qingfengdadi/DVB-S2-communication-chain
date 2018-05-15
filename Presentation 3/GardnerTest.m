@@ -19,7 +19,7 @@ Nbps = 4; % number of bits per symbol
 modulation = 'qam'; % type of modulation 
 bits_tx = randi(2,Nbits,1)-1;
 
-tshift_values = [0,40];
+tshift_values = [0,20];
 
 %% Mapping
 symbol_tx = mapping(bits_tx,Nbps,modulation);
@@ -62,7 +62,7 @@ for m = 1:length(tshift_values)
         symbol_rx_upsampled = symbol_rx_upsampled(1+tshift_values(m):end);
         
         %% Gardner
-        K=79e-8*(1/(Tsymb));
+        K = 0.5;
         L=length(symbol_rx_upsampled);
         L=L-mod(L,M);
         

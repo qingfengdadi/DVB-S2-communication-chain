@@ -18,7 +18,7 @@ beta = 0.3; % roll-off factor
 Nbps = 6; % number of bits per symbol
 modulation = 'qam'; % type of modulation 
 
-Nbits = 300000; % bit stream length
+Nbits = 30000; % bit stream length
 bits_tx = randi(2,Nbits,1)-1;
 
 fc = 2e+9;
@@ -89,7 +89,7 @@ semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'
 xlabel('E_B/N_0 [dB]');
 ylabel('BER');
 legend('CFO = 0 ppm','CFO = 10 ppm','CFO = 40 ppm','CFO = 70 ppm');
-title('CFO')
+title('BER degradation for increasing values of the CFO')
 grid on;
 
 %% Plot Constellation results for SNR = 20 

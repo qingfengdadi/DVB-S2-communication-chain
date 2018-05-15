@@ -8,7 +8,7 @@ clear; close all;
 
 %% Parameters
 f_cut = 1e+6; % cut off frequency of the nyquist filter [Mhz]
-M = 100; % oversampling factor (mettre à 100?)
+M = 8; % oversampling factor (mettre à 100?)
 fsymb = 2*f_cut; % symbol frequency
 fsampling = M*fsymb; % sampling frequency
 ts = 1/fsampling;
@@ -23,8 +23,8 @@ bits_pilot = randi(2,1,Npilot)-1;
 bits_data = randi(2,1,Nbits)-1;
 
 fc = 2e+9;
-ppm = fsampling*1e-6;
-CFO_values = [0 10]*ppm;
+ppm = fc*1e-6;
+CFO_values = [0 1]*ppm;
 phi0 = 0;
 
 pilot_pos = 200;
@@ -70,10 +70,8 @@ for m = 1:length(CFO_values)
         signal_rx = signal_tx + noise;
         signal_rx = signal_rx.*exp_cfo1;
         signal_rx = conv(signal_rx, h_time);
-        symbol_rx_upsampled = signal_rx(RRCtaps:end-RRCtaps+1);
-
-        %% Downsampling
-        symbol_rx = downsample(symbol_rx_upsampled, M);
+        symbol_rx = signal_rx(RRCtaps:end-RRCtaps+1);
+        
         
         %% Frame and frequency acquisition
         L = length(symbol_rx);
@@ -96,39 +94,42 @@ for m = 1:length(CFO_values)
         end
         est_cfo = -est_cfo/k_window;
         
-        exp_cfo2 = exp(1j*(2*pi*est_cfo*(0:length(symbol_rx)-1)*M*ts))';
+        exp_cfo2 = exp(-1j*(2*pi*cfo*(0:length(symbol_rx)-1)*ts*M))';
         symbol_rx = symbol_rx.*exp_cfo2;
-        symbol_rx = [symbol_rx(1:est_n-1);symbol_data(est_n:end)];
+        
+        %% Downsampling
+        symbol_rx = downsample(symbol_rx, M);
+%         symbol_rx = [symbol_rx(1:est_n/M);symbol_data(est_n/M:end)];
         
         %% Demapping
         bits_rx = (demapping(symbol_rx,Nbps,modulation))';
-        BER(j,m) = length(find(bits_data ~= bits_rx))/length(bits_rx');
+%         BER(j,m) = length(find(bits_data ~= bits_rx))/length(bits_rx');
                 
     end
-    scatterData(:,m) = symbol_rx;
+%     scatterData(:,m) = symbol_rx;
 end
 
 % figure
 % plot(sum(abs(D)));
 
-%% Plot BER results
-figure
-semilogy(EbN0,BER(:,1),'-o',EbN0,BER(:,2),'-o');
-xlabel('E_B/N_0 [dB]');
-ylabel('BER');
-legend('CFO = 0 ppm','CFO = 20 ppm');
-title('CFO')
-grid on;
-
-%% Plot Constellation results for SNR = 20 
-scatterplot(symbol_data,1,0,'r.')          
-title('TX Symbols')
-grid on
-
-scatterplot(scatterData(:,1),1,0,'r.')          
-title('CFO = 0 ppm')
-grid on
- 
-scatterplot(scatterData(:,2),1,0,'r.')     
-title('CFO = 20 ppm')
-grid on
+% %% Plot BER results
+% figure
+% semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o');
+% xlabel('E_B/N_0 [dB]');
+% ylabel('BER');
+% legend('CFO = 0 ppm','CFO = 1 ppm');
+% title('CFO')
+% grid on;
+% 
+% %% Plot Constellation results for SNR = 20 
+% scatterplot(symbol_data,1,0,'r.')          
+% title('TX Symbols')
+% grid on
+% 
+% scatterplot(scatterData(:,1),1,0,'r.')          
+% title('CFO = 0 ppm')
+% grid on
+%  
+% scatterplot(scatterData(:,2),1,0,'r.')     
+% title('CFO = 1 ppm')
+% grid on
