@@ -11,7 +11,7 @@ time_error = [];
 %% Parameters
 for m = 1:length(K_values)
 K = K_values(m);
-for iter = 1:50
+for iter = 1:100
 
 Nbits = 5000; % bit stream length
 f_cut = 1e6/2; % cut off frequency of the nyquist filter [Mhz]
