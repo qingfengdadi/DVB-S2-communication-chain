@@ -4,20 +4,21 @@ addpath(genpath('Code encodeur'));
 addpath(genpath('Code decodeur'));
 addpath(genpath('Code mapping-demapping'));
 addpath(genpath('Code HRC'));
+addpath(genpath('Data'));
 clear; close all;
 
 %% Parameters
-f_cut = 1e+6/2; % cut off frequency of the nyquist filter [Mhz]
+f_cut = 1e+6; % cut off frequency of the nyquist filter [Mhz]
 M = 8; % oversampling factor (mettre à 100?)
 fsymb = 2*f_cut; % symbol frequency
 fsampling = M*fsymb; % sampling frequency
 ts = 1/fsampling;
 Tsymb = 1/fsymb; % time between two symbols
 beta = 0.3; % roll-off factor
-Nbps = 4; % number of bits per symbol
+Nbps = 6; % number of bits per symbol
 modulation = 'qam'; % type of modulation 
 
-Nbits = 30000; % bit stream length
+Nbits = 300000; % bit stream length
 bits_tx = randi(2,Nbits,1)-1;
 
 fc = 2e+9;
@@ -45,7 +46,7 @@ h_time = fftshift(ifft(ifftshift(h_freq)));
 signal_tx = conv(symbol_tx_upsampled, h_time);
 
 %% Noise through the channel coded
-EbN0 = -4:0.5:20;
+EbN0 = 0:1:50;
 BER = zeros(length(EbN0),4);
 scatterData = zeros(length(symbol_tx),4);
 
@@ -69,7 +70,7 @@ for m = 1:length(CFO_values)
         %% Downsampling
         symbol_rx = downsample(symbol_rx_upsampled, M);
         
-        exp_cfo2 = exp(-1j*(2*pi*cfo*(0:length(symbol_rx)-1)*M*ts))'; %compensation
+        exp_cfo2 = exp(-1j*(2*pi*cfo*(0:length(symbol_rx)-1)*ts*M))'; % compensation to only observe ISI
         symbol_rx = symbol_rx.*exp_cfo2;
         
         %% Demapping
@@ -81,8 +82,10 @@ for m = 1:length(CFO_values)
 end
 
 %% Plot BER results
+% load phase_drift.mat
+% load ISI.mat
 figure
-semilogy(EbN0,BER(:,1),'-o',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'-o');
+semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'-o');
 xlabel('E_B/N_0 [dB]');
 ylabel('BER');
 legend('CFO = 0 ppm','CFO = 10 ppm','CFO = 40 ppm','CFO = 70 ppm');

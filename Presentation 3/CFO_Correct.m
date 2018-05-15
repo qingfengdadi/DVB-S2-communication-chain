@@ -7,7 +7,7 @@ addpath(genpath('Code HRC'));
 clear; close all;
 
 %% Parameters
-f_cut = 1e+6/2; % cut off frequency of the nyquist filter [Mhz]
+f_cut = 1e+6; % cut off frequency of the nyquist filter [Mhz]
 M = 100; % oversampling factor (mettre à 100?)
 fsymb = 2*f_cut; % symbol frequency
 fsampling = M*fsymb; % sampling frequency
@@ -18,7 +18,7 @@ Nbps = 2; % number of bits per symbol
 modulation = 'qam'; % type of modulation 
 
 Nbits = 800; % data bit stream length
-Npilot = 200; % Number of pilot bits
+Npilot = 100; % Number of pilot bits
 bits_pilot = randi(2,1,Npilot)-1;
 bits_data = randi(2,1,Nbits)-1;
 

@@ -7,8 +7,8 @@ addpath(genpath('Code HRC'));
 clear; close all;
 
 %% Parameters
-Nbits = 3000; % bit stream length
-f_cut = 1e6/2; % cut off frequency of the nyquist filter [Mhz]
+Nbits = 300000; % bit stream length
+f_cut = 1e6; % cut off frequency of the nyquist filter [Mhz]
 M = 100; % oversampling factor (mettre à 100?)
 fsymb = 2*f_cut; % symbol frequency
 fsampling = M*fsymb; % sampling frequency
@@ -41,7 +41,7 @@ h_time = fftshift(ifft(ifftshift(h_freq)));
 signal_tx = conv(symbol_tx_upsampled, h_time);
 
 %% Noise through the channel
-EbN0 = -4:1:20;
+EbN0 = -4:0.5:20;
 BER = zeros(length(EbN0),4);
 scatterData = zeros(length(symbol_tx),4);
 
@@ -73,6 +73,7 @@ for m = 1:length(tshift_values)
 end
 
 %% Plot BER results
+% load time_shift.mat
 figure
 semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'-o');
 xlabel('E_B/N_0 [dB]');
@@ -81,19 +82,19 @@ legend('t_0 = 0','t_0 = 2','t_0 = 5','t_0 = 10');
 title('Time Shift')
 grid on;
 
-%% Plot Constellation results for SNR = 20 
-scatterplot(scatterData(:,1),1,0,'r.')          
-title('Time Shift t_0 = 0')
-grid on
- 
-scatterplot(scatterData(:,2),1,0,'r.')     
-title('Time Shift t_0 = 2')
-grid on
-    
-scatterplot(scatterData(:,3),1,0,'r.')         
-title('Time Shift t_0 = 5')
-grid on
-      
-scatterplot(scatterData(:,4),1,0,'r.')         
-title('Time Shift t_0 = 10')
-grid on
+% %% Plot Constellation results for SNR = 20 
+% scatterplot(scatterData(:,1),1,0,'r.')          
+% title('Time Shift t_0 = 0')
+% grid on
+%  
+% scatterplot(scatterData(:,2),1,0,'r.')     
+% title('Time Shift t_0 = 2')
+% grid on
+%     
+% scatterplot(scatterData(:,3),1,0,'r.')         
+% title('Time Shift t_0 = 5')
+% grid on
+%       
+% scatterplot(scatterData(:,4),1,0,'r.')         
+% title('Time Shift t_0 = 10')
+% grid on
