@@ -46,7 +46,7 @@ h_time = fftshift(ifft(ifftshift(h_freq)));
 signal_tx = conv(symbol_tx_upsampled, h_time);
 
 %% Noise through the channel coded
-EbN0 = 50:1:50;
+EbN0 = 0:1:50;
 BER = zeros(length(EbN0),4);
 scatterData = zeros(length(symbol_tx),4);
 
@@ -61,7 +61,7 @@ for m = 1:length(CFO_values)
         noise = sqrt(NoisePower/2)*(randn(length(signal_tx),1)+1i*randn(length(signal_tx),1));
     
         exp_cfo1 = exp(1j*(2*pi*cfo*((0:length(signal_tx)-1)-(RRCtaps-1)/2)*ts+phi0))';
-        
+           
         signal_rx = signal_tx + noise;
         signal_rx = signal_rx.*exp_cfo1;
         signal_rx = conv(signal_rx, h_time);

@@ -24,7 +24,7 @@ bits_data = randi(2,1,Nbits)-1;
 
 fc = 2e+9;
 ppm = fc*1e-6;
-CFO_values = [1 10 20 30 40]*ppm;
+CFO_values = [10]*ppm;
 phi0 = 0;
 
 pilot_pos = 200;
@@ -72,6 +72,10 @@ for m = 1:length(CFO_values)
         signal_rx = conv(signal_rx, h_time);
         symbol_rx = signal_rx(RRCtaps:end-RRCtaps+1);
         
+        
+
+       
+        
         %% Downsampling
         symbol_rx = downsample(symbol_rx, M);
 %         symbol_rx = [symbol_rx(1:est_n/M);symbol_data(est_n/M:end)];
@@ -96,8 +100,6 @@ for m = 1:length(CFO_values)
 %             est_cfo = est_cfo + angle(D(k,est_n))/(2*pi*k*Tsymb);
 %         end
 %         est_cfo = -est_cfo/k_window
-
-        [est_n est_cfo] = cfoEstimate(symbol_rx,symbol_pilot,Tsymb,16)
         
         exp_cfo2 = exp(-1j*(2*pi*cfo*(0:length(symbol_rx)-1)*ts*M))';
         symbol_rx = symbol_rx.*exp_cfo2;
