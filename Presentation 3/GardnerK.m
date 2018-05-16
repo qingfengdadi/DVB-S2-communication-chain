@@ -7,7 +7,7 @@ addpath(genpath('Code HRC'));
 addpath(genpath('Data'));
 clear; close all;
 
-K_values = [0.05 0.2 0.5 1]*1e-2;
+K_values = [0.05 0.2 0.5 1];
 time_error = [];
 
 %% Parameters
@@ -27,7 +27,7 @@ Nbps = 2; % number of bits per symbol
 modulation = 'pam'; % type of modulation 
 bits_tx = randi(2,Nbits,1)-1;
 
-tshift = 5;
+tshift = 1;
 
 %% Mapping
 symbol_tx = mapping(bits_tx,Nbps,modulation);
