@@ -13,7 +13,7 @@ for k = 1:length(K_values)
 for n = 1:length(N_values) 
 K = K_values(k);
 N = N_values(n);
-for iter = 1:10
+for iter = 1:200
     
 f_cut = 1e+6; % cut off frequency of the nyquist filter [Mhz]
 M = 8; % oversampling factor (mettre à 100?)
@@ -25,8 +25,8 @@ beta = 0.3; % roll-off factor
 Nbps = 2; % number of bits per symbol
 modulation = 'qam'; % type of modulation 
 
-Nbits = 990; % data bit stream length
-Npilot = 10; % Number of pilot bits
+Nbits = 1000; % data bit stream length
+Npilot = N; % Number of pilot bits
 bits_pilot = randi(2,1,Npilot)-1;
 bits_data = randi(2,1,Nbits)-1;
 
@@ -85,7 +85,7 @@ for m = 1:length(CFO_values)
 %         symbol_rx = [symbol_rx(1:est_n/M);symbol_data(est_n/M:end)];
 
         %% Frame and frequency acquisition
-        [est_n,est_cfo] = cfoEstimate(symbol_rx,symbol_pilot,Tsymb,16);
+        [est_n,est_cfo] = cfoEstimate(symbol_rx,symbol_pilot,Tsymb,K);
         
         exp_cfo2 = exp(-1j*(2*pi*cfo*(0:length(symbol_rx)-1)*ts*M))';
         symbol_rx = symbol_rx.*exp_cfo2;
@@ -102,7 +102,7 @@ end
 end
 end
 %% Plot results
-% load CFO_K_N.mat
+load CFO_K_N.mat
 time_error_mean = std(time_error);  
 freq_error_mean = std(freq_error);
 
