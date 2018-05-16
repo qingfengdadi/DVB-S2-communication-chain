@@ -24,7 +24,7 @@ bits_data = randi(2,1,Nbits)-1;
 
 fc = 2e+9;
 ppm = fc*1e-6;
-CFO_values = [1 10 20 30 40]*ppm;
+CFO_values = [0 5 10 20 30 40]*ppm;
 phi0 = 0;
 
 pilot_pos = 200;
@@ -52,8 +52,8 @@ signal_tx = conv(symbol_tx_upsampled, h_time);
 
 %% Noise through the channel coded
 EbN0 = 10:10;
-BER = zeros(length(EbN0),2);
-scatterData = zeros(length(symbol_data),2);
+BER = zeros(length(EbN0),6);
+scatterData = zeros(length(symbol_data),6);
 
 signal_power = (trapz(abs(signal_tx).^2))*(1/fsampling); % total power
 Eb = signal_power*0.5/Nbits; % energy per bit
@@ -104,7 +104,7 @@ for m = 1:length(CFO_values)
         
         %% Demapping
         bits_rx = (demapping(symbol_rx,Nbps,modulation))';
-%         BER(j,m) = length(find(bits_data ~= bits_rx))/length(bits_rx');
+        BER(j,m) = length(find(bits_data ~= bits_rx))/length(bits_rx');
                 
     end
 %     scatterData(:,m) = symbol_rx;

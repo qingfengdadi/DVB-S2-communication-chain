@@ -71,7 +71,7 @@ for m = 1:length(tshift_values)
 %         error=zeros(L/M,1);
 %         corr=zeros(L/M,1);
 %         
-%         prevY = symbol_rx_upsampled(1);
+%         prevHoho = symbol_rx_upsampled(1);
 %         
 %         for i=1:(L/M)-1
 %             a=((i-1)*M:M*i);
@@ -79,12 +79,12 @@ for m = 1:length(tshift_values)
 %             c=M/2+(i-1)*M-error(i);
 %             c2=i*M-error(i);
 %             
-%             Y_mid = interp1(a,b,c,'pchip');
-%             Y = interp1(a,b,c2,'pchip');
+%             hihi = interp1(a,b,c,'pchip');
+%             hoho = interp1(a,b,c2,'pchip');
 %             
-%             corr(i)=(2*K)*real(Y_mid*(conj(Y) - conj(prevY)));
+%             corr(i)=(2*K)*real(hihi*(conj(hoho) - conj(prevHoho)));
 %             error(i+1) = error(i) + corr(i);
-%             prevY = Y;
+%             prevHoho = hoho;
 %         end
         
         %% Gardner algorithm

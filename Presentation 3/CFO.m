@@ -18,7 +18,7 @@ beta = 0.3; % roll-off factor
 Nbps = 6; % number of bits per symbol
 modulation = 'qam'; % type of modulation 
 
-Nbits = 3000; % bit stream length
+Nbits = 30000; % bit stream length
 bits_tx = randi(2,Nbits,1)-1;
 
 fc = 2e+9;
@@ -46,7 +46,7 @@ h_time = fftshift(ifft(ifftshift(h_freq)));
 signal_tx = conv(symbol_tx_upsampled, h_time);
 
 %% Noise through the channel coded
-EbN0 = 50:1:50;
+EbN0 = 0:1:25;
 BER = zeros(length(EbN0),4);
 scatterData = zeros(length(symbol_tx),4);
 
