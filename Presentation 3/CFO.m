@@ -83,7 +83,7 @@ end
 
 %% Plot BER results
 % load phase_drift.mat
-% load ISI.mat
+load ISI.mat
 figure
 semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'-o');
 xlabel('E_B/N_0 [dB]');

@@ -7,20 +7,20 @@ addpath(genpath('Code HRC'));
 addpath(genpath('Data'));
 clear; close all;
 
-K = 0.5;
+K = 0.4;
 time_error = [];
 
 fc = 2e+9;
 ppm = fc*1e-6;
-CFO_values = [0 100 500]*ppm;
+CFO_values = [0 100 200]*ppm;
 phi0 = 0;
 
 %% Parameters
 for m = 1:length(CFO_values)
 cfo = CFO_values(m);
-for iter = 1:10
+for iter = 1:100
 
-Nbits = 5000; % bit stream length
+Nbits = 1000; % bit stream length
 f_cut = 1e6/2; % cut off frequency of the nyquist filter [Mhz]
 M = 100; % oversampling factor (mettre à 100?)
 fsymb = 2*f_cut; % symbol frequency
@@ -75,26 +75,26 @@ Eb = signal_power*0.5/Nbits; % energy per bit
         symbol_rx_upsampled = symbol_rx_upsampled(1+tshift:end);
         
         %% Gardner
-        L=length(symbol_rx_upsampled);
-        L=L-mod(L,M);
+        L = length(symbol_rx_upsampled);
+        L = L-mod(L,M);
         
-        error=zeros(L/M,1);
-        corr=zeros(L/M,1);
+        error = zeros(L/M,1);
+        corr = zeros(L/M,1);
         
-        prevHoho = symbol_rx_upsampled(1);
+        prevY = symbol_rx_upsampled(1);
         
-        for i=1:(L/M)-1
-            a=((i-1)*M:M*i);
-            b=symbol_rx_upsampled(1+(i-1)*M:i*M+1);
-            c=M/2+(i-1)*M-error(i);
-            c2=i*M-error(i);
+        for i = 1:(L/M)-1
+            a = ((i-1)*M:M*i-1);
+            b = symbol_rx_upsampled(1+(i-1)*M:i*M);
+            c = M/2+(i-1)*M-error(i);
+            c2 = i*M-error(i);
             
-            hihi = interp1(a,b,c,'pchip');
-            hoho = interp1(a,b,c2,'pchip');
+            Y_mid = interp1(a,b,c,'pchip');
+            Y = interp1(a,b,c2,'pchip');
             
-            corr(i)=(2*K)*real(hihi*(conj(hoho) - conj(prevHoho)));
+            corr(i) = (2*K)*real(Y_mid*(conj(Y) - conj(prevY)));
             error(i+1) = error(i) + corr(i);
-            prevHoho = hoho;
+            prevY = Y;
         end
         
         time_error(iter,:,m) = (tshift-error(1:end)).'*Tsymb;
@@ -103,7 +103,7 @@ end
 end
 
 %% Plot BER results
-% load gardnerCFO.mat
+load gardnerCFO.mat
 time_error_mean = mean(time_error);
 time_error_stdv = std(time_error);
 mean1 = time_error_mean(1,:,1);
@@ -126,6 +126,6 @@ plot(mean3-stdv3,'--b')
 
 xlabel('Symbols');
 ylabel('Time error (mean \pm stdv)');
-legend('K = 0.05','K = 0.2','K = 0.5');
+legend('CFO = 0 ppm','CFO = 100 ppm','CFO = 200 ppm');
 title('Convergence of the Gardner algorithm')
 grid on;

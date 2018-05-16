@@ -111,7 +111,7 @@ end
 end
 
 %% Plot BER results
-% load gardnerK.mat
+load gardnerK.mat
 time_error_mean = mean(time_error);
 time_error_stdv = std(time_error);
 mean1 = time_error_mean(1,:,1);

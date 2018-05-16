@@ -59,7 +59,7 @@ signal_power = (trapz(abs(signal_tx).^2))*(1/fsampling); % total power
 Eb = signal_power*0.5/Nbits; % energy per bit
 
 for m = 1:length(CFO_values)
-    cfo = CFO_values(m);
+    cfo = CFO_values(m)
     for j = 1:length(EbN0)
         N0 = Eb/10.^(EbN0(j)/10);
         NoisePower = 2*N0*fsampling;
@@ -75,36 +75,15 @@ for m = 1:length(CFO_values)
         %% Downsampling
         symbol_rx = downsample(symbol_rx, M);
 %         symbol_rx = [symbol_rx(1:est_n/M);symbol_data(est_n/M:end)];
-%% Frame and frequency acquisition
-%         L = length(symbol_rx);
-%         N = length(symbol_pilot);
-%         k_window = 18;
-%         D = zeros(k_window, L-N+1);
-% 
-%         for k=1:k_window
-%             for l = k_window:N-1
-%                 D(k,:) = D(k,:) + ((conj(symbol_rx(l:l+L-N)).*symbol_pilot(l)).*conj(conj(symbol_rx(l-k+1:l-k+L-N+1)).*symbol_pilot(l-k+1))).';
-%             end
-%             D(k,:)=D(k,:)/(N-k);
-%         end
-%         
-%         [~,est_n] = max(sum(abs(D)));
-%         est_n
-%         est_cfo = 0;
-% 
-%         for k=1:k_window
-%             est_cfo = est_cfo + angle(D(k,est_n))/(2*pi*k*Tsymb);
-%         end
-%         est_cfo = -est_cfo/k_window
-
-        [est_n est_cfo] = cfoEstimate(symbol_rx,symbol_pilot,Tsymb,16)
+        %% Frame and frequency acquisition
+        [est_n, est_cfo] = cfoEstimate(symbol_rx,symbol_pilot,Tsymb,16)
         
         exp_cfo2 = exp(-1j*(2*pi*cfo*(0:length(symbol_rx)-1)*ts*M))';
         symbol_rx = symbol_rx.*exp_cfo2;
         
-        %% Demapping
-        bits_rx = (demapping(symbol_rx,Nbps,modulation))';
-        BER(j,m) = length(find(bits_data ~= bits_rx))/length(bits_rx');
+%         %% Demapping
+%         bits_rx = (demapping(symbol_rx,Nbps,modulation))';
+%         BER(j,m) = length(find(bits_data ~= bits_rx))/length(bits_rx');
                 
     end
 %     scatterData(:,m) = symbol_rx;
