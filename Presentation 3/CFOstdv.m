@@ -83,28 +83,8 @@ for m = 1:length(CFO_values)
         %% Downsampling
         symbol_rx = downsample(symbol_rx, M);
 %         symbol_rx = [symbol_rx(1:est_n/M);symbol_data(est_n/M:end)];
-%% Frame and frequency acquisition
-%         L = length(symbol_rx);
-%         N = length(symbol_pilot);
-%         k_window = 18;
-%         D = zeros(k_window, L-N+1);
-% 
-%         for k=1:k_window
-%             for l = k_window:N-1
-%                 D(k,:) = D(k,:) + ((conj(symbol_rx(l:l+L-N)).*symbol_pilot(l)).*conj(conj(symbol_rx(l-k+1:l-k+L-N+1)).*symbol_pilot(l-k+1))).';
-%             end
-%             D(k,:)=D(k,:)/(N-k);
-%         end
-%         
-%         [~,est_n] = max(sum(abs(D)));
-%         est_n
-%         est_cfo = 0;
-% 
-%         for k=1:k_window
-%             est_cfo = est_cfo + angle(D(k,est_n))/(2*pi*k*Tsymb);
-%         end
-%         est_cfo = -est_cfo/k_window
 
+        %% Frame and frequency acquisition
         [est_n,est_cfo] = cfoEstimate(symbol_rx,symbol_pilot,Tsymb,16);
         
         exp_cfo2 = exp(-1j*(2*pi*cfo*(0:length(symbol_rx)-1)*ts*M))';
@@ -121,28 +101,3 @@ end
 end
 end
 end
-
-% figure
-% plot(sum(abs(D)));
-
-% %% Plot BER results
-% figure
-% semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o');
-% xlabel('E_B/N_0 [dB]');
-% ylabel('BER');
-% legend('CFO = 0 ppm','CFO = 1 ppm');
-% title('CFO')
-% grid on;
-% 
-% %% Plot Constellation results for SNR = 20 
-% scatterplot(symbol_data,1,0,'r.')          
-% title('TX Symbols')
-% grid on
-% 
-% scatterplot(scatterData(:,1),1,0,'r.')          
-% title('CFO = 0 ppm')
-% grid on
-%  
-% scatterplot(scatterData(:,2),1,0,'r.')     
-% title('CFO = 1 ppm')
-% grid on

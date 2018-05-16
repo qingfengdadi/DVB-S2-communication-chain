@@ -64,47 +64,29 @@ for m = 1:length(tshift_values)
 %         symbol_rx_upsampled = [symbol_rx_upsampled(1+tshift_values(m):end);zeros(tshift_values(m),1)];
         
         %% Gardner
-%         K = 0.2;
-%         L=length(symbol_rx_upsampled);
-%         L=L-mod(L,M);
-%         
-%         error=zeros(L/M,1);
-%         corr=zeros(L/M,1);
-%         
-%         prevY = symbol_rx_upsampled(1);
-%         
-%         for i=1:(L/M)-1
-%             a=((i-1)*M:M*i);
-%             b=symbol_rx_upsampled(1+(i-1)*M:i*M+1);
-%             c=M/2+(i-1)*M-error(i);
-%             c2=i*M-error(i);
-%             
-%             Y_mid = interp1(a,b,c,'pchip');
-%             Y = interp1(a,b,c2,'pchip');
-%             
-%             corr(i)=(2*K)*real(Y_mid*(conj(Y) - conj(prevY)));
-%             error(i+1) = error(i) + corr(i);
-%             prevY = Y;
-%         end
+        K = 0.2;
+        L=length(symbol_rx_upsampled);
+        L=L-mod(L,M);
         
-        %% Gardner algorithm
-        K = 0.00000001*2/Tsymb;
-        yObtained = [];
-
-        yObtained(1)=symbol_rx_upsampled(1);
-        yHalf(1) = 0;
-
-        E(1)=0;
-        for i = 1:(length(symbol_rx_upsampled)/M-1)
-            tempE=E(i);
-            deltaTemp = round(tempE*Tsymb/(Tsymb/M));
-            yObtained(i+1)=symbol_rx_upsampled((i)*M+1-deltaTemp); %get Y(n+1) corrected with error E(n)
-            yHalf(i+1)=symbol_rx_upsampled((i)*M+1-deltaTemp-M/2);
-
-            E(i+1)=E(i)+K.*real(yHalf(i+1)*(yObtained(i+1)'-yObtained(i)'));
+        error=zeros(L/M,1);
+        corr=zeros(L/M,1);
+        
+        prevY = symbol_rx_upsampled(1);
+        
+        for i=1:(L/M)-1
+            a=((i-1)*M:M*i);
+            b=symbol_rx_upsampled(1+(i-1)*M:i*M+1);
+            c=M/2+(i-1)*M-error(i);
+            c2=i*M-error(i);
+            
+            Y_mid = interp1(a,b,c,'pchip');
+            Y = interp1(a,b,c2,'pchip');
+            
+            corr(i)=(2*K)*real(Y_mid*(conj(Y) - conj(prevY)));
+            error(i+1) = error(i) + corr(i);
+            prevY = Y;
         end
-
-        signal_rx = yObtained';
+        
         
         %% Time shift + Correction shift
 %         symbol_rx_upsampled = signal_rx(RRCtaps:end-RRCtaps+1);
