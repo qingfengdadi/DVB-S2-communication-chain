@@ -6,7 +6,7 @@ addpath(genpath('Code mapping-demapping'));
 addpath(genpath('Code HRC'));
 clear; close all;
 
-K_values = [0.05 0.2 0.5 1];
+K_values = [0.025 0.05 0.1 0.5];
 time_error = [];
 %% Parameters
 for m = 1:length(K_values)
@@ -25,7 +25,7 @@ Nbps = 2; % number of bits per symbol
 modulation = 'pam'; % type of modulation 
 bits_tx = randi(2,Nbits,1)-1;
 
-tshift = 5;
+tshift = 1;
 
 %% Mapping
 symbol_tx = mapping(bits_tx,Nbps,modulation);
