@@ -7,7 +7,7 @@ addpath(genpath('Code HRC'));
 clear; close all;
 
 %% Parameters
-Nbits = 10000; % bit stream length
+Nbits = 200000; % bit stream length
 f_cut = 1e6/2; % cut off frequency of the nyquist filter [Mhz]
 M = 100; % oversampling factor (mettre à 100?)
 fsymb = 2*f_cut; % symbol frequency
@@ -111,8 +111,8 @@ figure
 semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o');
 xlabel('E_B/N_0 [dB]');
 ylabel('BER');
-legend('t_0 = 0','t_0 = 10');
-title('Time Shift')
+legend('t_0 = 0 Ts','t_0 = 0.1 Ts');
+title('BER with Gardner correction')
 grid on;
 
 %% Plot Constellation results for SNR = 20 
@@ -121,5 +121,13 @@ title('Time Shift t_0 = 0')
 grid on
  
 scatterplot(scatterData(:,2),1,0,'r.')     
-title('Time Shift t_0 = 20')
+title('Time Shift t_0 = 10')
+grid on
+
+plot(real(scatterData(:,2)),imag(scatterData(:,2)),'r.');hold on
+plot(real(scatterData(:,1)),imag(scatterData(:,1)),'g.')
+legend('Time Shift t_0 = 0.1 Ts','Time Shift t_0 = 0 Ts')
+xlabel('In-phase Amplitude')
+ylabel('Quadrature Amplitude')
+title('Constellation diagram')
 grid on

@@ -7,7 +7,7 @@ addpath(genpath('Code HRC'));
 clear; close all;
 
 %% Parameters
-Nbits = 30000; % bit stream length
+Nbits = 500000; % bit stream length
 f_cut = 1e6; % cut off frequency of the nyquist filter [Mhz]
 M = 100; % oversampling factor
 fsymb = 2*f_cut; % symbol frequency
@@ -76,6 +76,8 @@ end
 load time_shift.mat
 figure
 semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'-o');
+xlim([-4,14]);
+% ylim([]);
 xlabel('E_B/N_0 [dB]');
 ylabel('BER');
 legend('t_0 = 0 Ts','t_0 = 0.02 Ts','t_0 = 0.05 Ts','t_0 = 0.1 Ts');

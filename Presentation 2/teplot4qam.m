@@ -12,12 +12,12 @@ M = 10; % oversampling factor
 fsymb = 2*f_cut; % symbol frequency
 fsampling = M*fsymb; % sampling frequency
 Tsymb = 1/fsymb; % time between two symbols
-Nbps = 2; % number of bits per symbol
+Nbps = 6; % number of bits per symbol
 modulation = 'qam'; % type of modulation 
 beta = 0.3; % roll-off factor
 
-Npackets = 500; % choose such that Nbits/Nbps is an integer
-packetLength = 128;
+Npackets = 400; % choose such that Nbits/Nbps is an integer
+packetLength = 126;
 codedWordLength = 2*packetLength;
 Nbits = Npackets*packetLength; % bit stream length
 NcodedBits = Npackets*codedWordLength; % full coded word length
@@ -57,7 +57,7 @@ signal_hrrc_tx = conv(signal_tx, h_time);
 
 %% Noise through the channel uncoded
 EbN0 = -5:16;
-BER = zeros(length(EbN0),5);
+BER = zeros(length(EbN0),2);
 
 signal_power_uncoded = (trapz(abs(signal_hrrc_tx_uncoded).^2))*(1/fsampling); % total power
 Eb = signal_power_uncoded*0.5/(Npackets*packetLength); % energy per bit
@@ -82,40 +82,37 @@ end
 %% Noise through the channel coded
 signal_power = (trapz(abs(signal_hrrc_tx).^2))*(1/fsampling); % total power
 Eb = signal_power*0.5/(Npackets*codedWordLength); % energy per bit
-iter = [1 4 7 10];
+iter = 5;
+for j = 1:length(EbN0)
+    N0 = Eb/10.^(EbN0(j)/10);
+    NoisePower = 2*N0*fsampling;
+    noise = sqrt(NoisePower/2)*(randn(length(signal_hrrc_tx),1)+1i*randn(length(signal_hrrc_tx),1));
 
-for m = 1:4
-    for j = 1:length(EbN0)
-        N0 = Eb/10.^(EbN0(j)/10);
-        NoisePower = 2*N0*fsampling;
-        noise = sqrt(NoisePower/2)*(randn(length(signal_hrrc_tx),1)+1i*randn(length(signal_hrrc_tx),1));
+    signal_rx = signal_hrrc_tx + noise;
+    signal_hhrc_rx = conv(signal_rx, h_time);
+    signal_hhrc_rx_trunc = signal_hhrc_rx(RRCtaps:end-RRCtaps+1);
 
-        signal_rx = signal_hrrc_tx + noise;
-        signal_hhrc_rx = conv(signal_rx, h_time);
-        signal_hhrc_rx_trunc = signal_hhrc_rx(RRCtaps:end-RRCtaps+1);
+    %% Downsampling
+    signal_rx_down = downsample(signal_hhrc_rx_trunc, M);
 
-        %% Downsampling
-        signal_rx_down = downsample(signal_hhrc_rx_trunc, M);
+    %% Demapping
+    encoded_bits_rx = (demapping(signal_rx_down,Nbps,modulation))';
 
-        %% Demapping
-        encoded_bits_rx = (demapping(signal_rx_down,Nbps,modulation))';
-
-        %% Hard Decoding
-        decoded_bits_rx = zeros(Nbits,1);
-        for k=1:Npackets
-            packet_rx = encoded_bits_rx(1+(k-1)*codedWordLength : k*codedWordLength);
-            decoded_packet_rx = LdpcHardDecoder(packet_rx, H, tannerGraph, iter(m));
-            decoded_bits_rx(1+(k-1)*packetLength:k*packetLength) = decoded_packet_rx(packetLength+1:end);
-        end
-        BER(j,1+m) = length(find(bits_tx ~= decoded_bits_rx))/length(decoded_bits_rx);
+    %% Hard Decoding
+    decoded_bits_rx = zeros(Nbits,1);
+    for k=1:Npackets
+        packet_rx = encoded_bits_rx(1+(k-1)*codedWordLength : k*codedWordLength);
+        decoded_packet_rx = LdpcHardDecoder(packet_rx, H, tannerGraph, iter);
+        decoded_bits_rx(1+(k-1)*packetLength:k*packetLength) = decoded_packet_rx(packetLength+1:end);
     end
+    BER(j,2) = length(find(bits_tx ~= decoded_bits_rx))/length(decoded_bits_rx);
 end
 
 %% Plot BER results
-load hard_iter4QAM.mat;
-semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'-o',EbN0,BER(:,5),'-o');xlim([-4,10]);
+% load BER_iterHardBPSK.mat; load EB_N0_iterHardBPSK.mat
+semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o');
 xlabel('E_B/N_0 [dB]');
 ylabel('BER');
-legend('Uncoded','it = 1','it = 4','it = 7','it = 10');
-title('Hard Decoding 4QAM')
+legend('Uncoded','Coded');
+title('Hard Decoding BPSK')
 grid on;

@@ -13,7 +13,7 @@ for k = 1:length(K_values)
 for n = 1:length(N_values) 
 K = K_values(k);
 N = N_values(n);
-for iter = 1:200
+for iter = 1:5
     
 f_cut = 1e+6; % cut off frequency of the nyquist filter [Mhz]
 M = 8; % oversampling factor (mettre à 100?)
@@ -32,10 +32,10 @@ bits_data = randi(2,1,Nbits)-1;
 
 fc = 2e+9;
 ppm = fc*1e-6;
-CFO_values = [2]*ppm;
+CFO_values = [1]*ppm;
 phi0 = 0;
 
-pilot_pos = 200;
+pilot_pos = 1;
 
 %% Mapping of encoded signal
 symbol_pilot = mapping(bits_pilot',Nbps,modulation);
@@ -102,7 +102,55 @@ end
 end
 end
 %% Plot results
-load CFO_K_N.mat
+% load CFO_K_N.mat
+time_error_mean = mean(time_error);  
+freq_error_mean = mean(freq_error);
+
+N_values = [10, 20, 40];
+K_values = [1, 8, 16];
+
+figure
+plot(EbN0,time_error_mean(1,:,2,1),'-r');hold on;
+plot(EbN0,time_error_mean(1,:,2,2),'-g');
+plot(EbN0,time_error_mean(1,:,2,3),'-b');
+xlabel('E_B/N_0 [dB]');
+ylabel('Time error stdv [samples]');
+legend('N = 10, K = 8','N = 20, K = 8','N = 40, K = 8');
+title('Time error variances')
+grid on;
+
+figure
+plot(EbN0,time_error_mean(1,:,1,2),'-r');hold on;
+plot(EbN0,time_error_mean(1,:,2,2),'-g');
+plot(EbN0,time_error_mean(1,:,3,2),'-b');
+xlabel('E_B/N_0 [dB]');
+ylabel('Time error stdv [samples]');
+legend('N = 20, K = 1','N = 20, K = 8','N = 20, K = 16');
+title('Time error variances')
+grid on;
+
+figure
+plot(EbN0,freq_error_mean(1,:,2,1),'-r');hold on;
+plot(EbN0,freq_error_mean(1,:,2,2),'-g');
+plot(EbN0,freq_error_mean(1,:,2,3),'-b');
+xlabel('E_B/N_0 [dB]');
+ylabel('Frequency error stdv [ppm]');
+legend('N = 10, K = 8','N = 20, K = 8','N = 40, K = 8');
+title('Frequency error variances')
+grid on;
+
+figure
+plot(EbN0,freq_error_mean(1,:,1,2),'-r');hold on;
+plot(EbN0,freq_error_mean(1,:,2,2),'-g');
+plot(EbN0,freq_error_mean(1,:,3,2),'-b');
+xlabel('E_B/N_0 [dB]');
+ylabel('Frequency error stdv [ppm]');
+legend('N = 20, K = 1','N = 20, K = 8','N = 20, K = 16');
+title('Frequency error variances')
+grid on;
+
+
+%%
 time_error_mean = std(time_error);  
 freq_error_mean = std(freq_error);
 

@@ -8,17 +8,17 @@ addpath(genpath('Data'));
 clear; close all;
 
 %% Parameters
-f_cut = 1e+6; % cut off frequency of the nyquist filter [Mhz]
+f_cut = 1e+6/2; % cut off frequency of the nyquist filter [Mhz]
 M = 8; % oversampling factor (mettre à 100?)
 fsymb = 2*f_cut; % symbol frequency
 fsampling = M*fsymb; % sampling frequency
 ts = 1/fsampling;
 Tsymb = 1/fsymb; % time between two symbols
 beta = 0.3; % roll-off factor
-Nbps = 6; % number of bits per symbol
+Nbps = 4; % number of bits per symbol
 modulation = 'qam'; % type of modulation 
 
-Nbits = 30000; % bit stream length
+Nbits = 6000; % bit stream length
 bits_tx = randi(2,Nbits,1)-1;
 
 fc = 2e+9;
@@ -46,7 +46,7 @@ h_time = fftshift(ifft(ifftshift(h_freq)));
 signal_tx = conv(symbol_tx_upsampled, h_time);
 
 %% Noise through the channel coded
-EbN0 = 0:1:25;
+EbN0 = 0:1:16;
 BER = zeros(length(EbN0),4);
 scatterData = zeros(length(symbol_tx),4);
 
@@ -83,9 +83,9 @@ end
 
 %% Plot BER results
 % load phase_drift.mat
-load ISI.mat
+% load ISI.mat
 figure
-semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'-o');
+semilogy(EbN0,BER(:,1),'-',EbN0,BER(:,2),'-o',EbN0,BER(:,3),'-o',EbN0,BER(:,4),'-o');xlim([0,15]);
 xlabel('E_B/N_0 [dB]');
 ylabel('BER');
 legend('CFO = 0 ppm','CFO = 10 ppm','CFO = 40 ppm','CFO = 70 ppm');
@@ -112,3 +112,13 @@ grid on
 scatterplot(scatterData(:,4),1,0,'r.')         
 title('CFO = 70 ppm')
 grid on
+
+plot(real(scatterData(:,4)),imag(scatterData(:,4)),'r.');hold on
+plot(real(scatterData(:,3)),imag(scatterData(:,3)),'b.');
+plot(real(symbol_tx),imag(symbol_tx),'g.'); 
+legend('70 ppm','40 ppm','Correct constellation')
+xlabel('In-phase Amplitude')
+ylabel('Quadrature Amplitude')
+title('Constellation diagram')
+grid on
+
